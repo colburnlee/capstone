@@ -19,7 +19,7 @@ The user will access the login page from the existing pearsuite.com page. After 
 
 The data models will be focused on Pear Suite Administration and Customer user types. The data pulled from QuickBooks can be pulled by request via their API, so to pull data and store it within a Django server is duplicative (and a security concern).
 
-[img - classes](./classes.drawio.svg)
+![img - classes](./classes.drawio.svg)
 
 **Schedule**
 
