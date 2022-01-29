@@ -1,19 +1,29 @@
-{%load static%}
+{% load static %}
 
 <nav class="navbar navbar-expand-lg navbar-light bg-secondary">
 
-    <!-- Icons for Navbar -->
-    <div class="container">
-      <a class="navbar-brand" href="{% url 'reports_app:home' %}">
-        <img src="static/pear_logo.png" alt="Pear Suite Logo" width="240" height="60">
-      </a>
+  <!-- Navbar Lgoo -->
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'reports_app:index' %}">
+      <img src="{% static 'pear_logo.png' %}" alt="Pear Suite Logo" width="200" height="50">
+    </a>
 
+    {% if request.user.is_authenticated %}
 
-    <!-- Login for Users/Admin -->
-      <div class="btn-group">
-        <a class="btn btn-outline-dark mx-1" role="button" href="{% url 'users_app:login' %}">Login</a>
-        <a class="btn btn-outline-dark mx-1" role="button" href="{% url 'users_app:register' %}">Register</a>
+      <!-- Logout if logged in -->
+      <div class="d-flex mx-1">
+          <a class="btn btn-outline-dark mx-3" href="{% url 'users_app:profile' user.username %}">User Profile</a>
+          <a class="btn btn-outline-dark mx-3" href="{% url 'users_app:logout' %}">Logout</a>
       </div>
 
-    </div>
+      {% else %}
+      <!-- Login for Users/Admin -->
+      <div class="btn-group">
+        <a class="btn btn-outline-dark mx-1" href="{% url 'users_app:login' %}">Login</a>  
+        <a class="btn btn-outline-dark mx-1" href="{% url 'users_app:register' %}">Sign up</a>
+      </div>
+
+    {% endif %}
+  
+  </div>
 </nav>

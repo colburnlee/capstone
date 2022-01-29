@@ -9,11 +9,14 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+from dotenv import load_dotenv
+
 
 from pathlib import Path
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -123,7 +126,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # LTC - Adding project level static folder
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')] 
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'),] 
 
 # LTC - Add the CustomUser model as default user modeling
 AUTH_USER_MODEL = 'users_app.User'
@@ -132,3 +135,28 @@ AUTH_USER_MODEL = 'users_app.User'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+
+# OAauth2 config here
+CLIENT_ID = os.getenv('quickbooks_client_id')
+CLIENT_SECRET = os.getenv('quickbooks_client_secret')
+REDIRECT_URI = os.getenv('quickbooks_url')
+#REDIRECT_URI = 'https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl'
+ENVIRONMENT = 'sandbox'
+
+COMPANY_ID = os.getenv('quickbooks_customer_id')
+
+# QBO Base URLs
+QBO_BASE_SANDBOX = 'https://sandbox-quickbooks.api.intuit.com'
+QBO_BASE_PROD = 'https://quickbooks.api.intuit.com'
+
+
+# OAuth1 config for migration
+CONSUMER_KEY = '<EnterHere>'
+CONSUMER_SECRET = '<EnterHere>'
+ACCESS_KEY = '<EnterHere>'
+ACCESS_SECRET = '<EnterHere>'
+
+REALM_ID = '<EnterHere>'

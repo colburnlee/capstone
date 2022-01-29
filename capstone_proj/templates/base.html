@@ -15,6 +15,30 @@
     <!-- Bootstrap ICON CDN-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 
+    <!-- VUE.JS CDN development version, includes helpful console warnings -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+    <!-- AXIOS -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <!-- Standard Intuit Popup for Authentication -->
+    <script>
+        if (window.opener) {
+          window.opener.location.href = '/oauth/'
+          window.close()
+      }
+
+      function launchPopup(path) {
+          var win;
+          var checkConnect;
+          var parameters = "location=1,width=800,height=650";
+          parameters += ",left=" + (screen.width - 800) / 2 + ",top=" + (screen.height - 650) / 2;
+
+          // Launch Popup
+          win = window.open(path, 'connectPopup', parameters);
+      }
+    </script>
+
     <title>Admin Dashboard</title>
   </head>
   <body>
@@ -25,7 +49,11 @@
     <main class="container py-5">
     {% block content%} 
     {% endblock %}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+    
+
+  
     </main>
+    
   </body>
 </html>

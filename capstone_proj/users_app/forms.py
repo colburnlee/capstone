@@ -13,7 +13,6 @@ class UserForm(forms.ModelForm):
             'username',
             'password',
             'finance_id',
-            'start_date',
             'end_date',
         ]
 
@@ -25,7 +24,6 @@ class UserForm(forms.ModelForm):
             'username': forms.TextInput(attrs={'class':'form-control'}),
             'password': forms.PasswordInput(attrs={'class':'form-control'}),
             'finance_id': forms.TextInput(attrs={'class':'form-control'}),
-            'start_date': forms.DateTimeInput(attrs={'class':'form-control'}),
             'end_date': forms.DateTimeInput(attrs={'class':'form-control'}),
         }
 

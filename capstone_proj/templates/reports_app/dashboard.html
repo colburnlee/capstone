@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        
+        <script>
+            function apiCall() {
+                $("#result").html('Loading...')
+                $.get("/qbo_request/", function (data) {
+                    $("#result").html(data)
+                })
+            }
+            
+            function revokeCall() {
+                $("#result").html('Loading...')
+                $.get("/revoke/", function (data) {
+                    $("#result").html(data)
+                })
+            }
+
+            function refreshCall() {
+                $("#result").html('Loading...')
+                $.get("/refresh/", function (data) {
+                    $("#result").html(JSON.stringify(data, null, 2))
+                })
+            }
+        </script>
+
+<div class="col" id="app">
+    <h1 class="h1">Finance Dashboard</h1>
+    <div class="card text-white bg-secondary border-dark mt-4 shadow">
+        <div class="d-flex justify-content-center">
+
+        </div>
+        <div class="card-body">
+            <h5 class="card-title text-center"><b>Information</b></h5>          
+            <p class="card-text text-end">
+                
+                Name: {{user.first_name}} {{user.last_name}} <br>
+                Username: {{user.username}} <br>
+                Email Address: {{user.email}} <br>
+                Finance ID: {{user.finance_id}} <br>
+                Service End Date: {{user.end_date}} <br><br>
+                
+                <!-- Button -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#parentCompanyInfo">
+                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Address & Contact Info
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="parentCompanyInfo" tabindex="-1" aria-labelledby="parentCompanyInfoLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title text-dark" id="parentCompanyInfoLabel">[[ parentCompanyData.data.CompanyInfo.LegalName ]]</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-dark">
+                            Address:
+                            <br> 
+                            [[ parentCompanyData.data.CompanyInfo.CompanyAddr.Line1 ]] <br>
+                            [[ parentCompanyData.data.CompanyInfo.CompanyAddr.City ]], [[ parentCompanyData.data.CompanyInfo.CompanyAddr.CountrySubDivisionCode ]] [[ parentCompanyData.data.CompanyInfo.CompanyAddr.PostalCode ]]
+                            <br><br>
+                            Email: [[ parentCompanyData.data.CompanyInfo.Email.Address ]]
+                            
+                        </div>
+                        <div class="modal-footer">
+                        <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Button -->
+                <button v-on:click="invoiceRequest()" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#invoiceInfo" >
+                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Invoice
+                </button>
+                
+                <!-- Modal -->
+                <div class="modal fade" id="invoiceInfo" tabindex="-1" aria-labelledby="invoiceInfoLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title text-dark" id="invoiceInfoLabel"> Invoice </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-dark">
+                            [[ invoiceData ]]
+                            
+                        </div>
+                        <div class="modal-footer">
+                        <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <br><br>
+                Reporting:
+                <div>
+                    
+                    <button onclick="apiCall()">QuickBooks API Call</button>
+                    <button onclick="refreshCall()">Refresh Token Call</button>
+                    <button onclick="revokeCall()">Revoke Token Call</button>
+                    <button v-on:click="listCustomers()">List Customers Call</button>
+                    
+                    <br><br> 
+                    <div id="result"></div> [[ listCustomerData.data ]]
+                    
+            </p>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- Bootstrap CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script src="{% static 'dashboard_reports.js' %}"></script>
+
+{% endblock content %}
