@@ -4,14 +4,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         
-        <script>
-            function apiCall() {
-                $("#result").html('Loading...')
-                $.get("/qbo_request/", function (data) {
-                    $("#result").html(data)
-                })
-            }
-            
+        <script>           
             function revokeCall() {
                 $("#result").html('Loading...')
                 $.get("/revoke/", function (data) {
@@ -43,12 +36,12 @@
                 Finance ID: {{user.finance_id}} <br>
                 Service End Date: {{user.end_date}} <br><br>
                 
-                <!-- Button -->
+                <!-- Pear Suite Contact Info Button -->
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#parentCompanyInfo">
-                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Address & Contact Info
+                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Contact Info
                 </button>
 
-                <!-- Modal -->
+                <!-- Pear Suite Contact Info Modal -->
                 <div class="modal fade" id="parentCompanyInfo" tabindex="-1" aria-labelledby="parentCompanyInfoLabel" aria-hidden="true">
                     <div class="modal-dialog">
                     <div class="modal-content">
@@ -72,12 +65,12 @@
                     </div>
                 </div>
 
-                <!-- Button -->
+                <!-- Pear Suite Total Invoice History: Button -->
                 <button v-on:click="invoiceRequest()" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#invoiceInfo" >
-                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Invoice
+                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Invoice History
                 </button>
                 
-                <!-- Modal -->
+                <!-- Pear Suite Total Invoice History: Modal -->
                 <div class="modal fade" id="invoiceInfo" tabindex="-1" aria-labelledby="invoiceInfoLabel" aria-hidden="true">
                     <div class="modal-dialog">
                     <div class="modal-content">
@@ -87,7 +80,32 @@
                         </div>
                         <div class="modal-body text-dark">
                             [[ invoiceData ]]
+                            <!-- <p v-for="value in invoiceData">[[value]]</p>  -->
+                        </div>
+                        <div class="modal-footer">
+                        <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Pear Suite Current Customers Button: -->
+                
+                <button v-on:click="listCustomers()" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#currentCustomerInfo" >
+                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Current Customers
+                </button>
+                
+                <!-- Pear Suite Current Customers Modal: -->
+                <div class="modal fade" id="currentCustomerInfo" tabindex="-1" aria-labelledby="currentCustomerInfoLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title text-dark" id="currentCustomerInfoLabel"> Current Customers </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-dark">
                             
+                            [[ listCustomerData ]]
                         </div>
                         <div class="modal-footer">
                         <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -100,13 +118,22 @@
                 Reporting:
                 <div>
                     
-                    <button onclick="apiCall()">QuickBooks API Call</button>
-                    <button onclick="refreshCall()">Refresh Token Call</button>
-                    <button onclick="revokeCall()">Revoke Token Call</button>
-                    <button v-on:click="listCustomers()">List Customers Call</button>
+                    <button v-on:click="refreshCurrentToken()">Refresh Token Call</button>
+                    <button v-on:click="listBills()">See Bills</button>
+                    <button v-on:click="lookupCompanyById()">Lookup Company by ID</button>
+                    <button v-on:click="manualCompanyLookup()">Manual Company Lookup</button>
+                    <button v-on:click="">List Customers Call</button>
                     
                     <br><br> 
-                    <div id="result"></div> [[ listCustomerData.data ]]
+                    <div id="result"></div> 
+                    
+                    <div class=""></div>
+                    [[ refreshToken ]]
+                    [[ listBillData ]]
+                    [[ lookupCompany ]]
+                    [[ companyTest ]]
+
+                        
                     
             </p>
 

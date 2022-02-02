@@ -1,8 +1,12 @@
 # Create your views here.
 from __future__ import absolute_import
+from cgi import test
+from http.client import HTTPResponse
+from pandas import json_normalize
 
 from requests import HTTPError
 import json
+import requests
 
 from intuitlib.client import AuthClient
 from intuitlib.migration import migrate
@@ -12,6 +16,7 @@ from intuitlib.exceptions import AuthClientError
 from quickbooks import QuickBooks
 from quickbooks.objects.customer import Customer
 from quickbooks.objects.invoice import Invoice
+from quickbooks.objects.bill import Bill
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
@@ -20,6 +25,14 @@ from django.core import serializers
 
 from reports_app.services import qbo_api_call
 
+auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT,
+    )
+
+url = auth_client.get_authorization_url([Scopes.Accounting])
 # Create your views here.
 def index(request):
     return render(request, 'reports_app/index.html')
@@ -167,7 +180,7 @@ def refresh(request):
     except AuthClientError as e:
         print(e.status_code)
         print(e.intuit_tid)
-    return HttpResponse('New refresh_token: {0}'.format(auth_client.refresh_token))
+    return HttpResponse(auth_client.refresh_token, content_type="application/json")
 
 def revoke(request):
     auth_client = AuthClient(
@@ -215,19 +228,28 @@ def invoice(request):
         settings.REDIRECT_URI, 
         settings.ENVIRONMENT,
     )
-    print(f"auth client created: {auth_client}")
     client = QuickBooks(
         auth_client=auth_client,
         refresh_token=request.session.get('refresh_token', None),
-        company_id="1"
+        company_id=settings.COMPANY_ID,
+        minorversion=63
     )
-    print(f"client created: {client}")
+
+    
     
     # Get customer invoices ordered by TxnDate
-    invoices = Invoice.filter(CustomerRef='100', order_by='TxnDate', qb=client)
-    print(f"invoices created: {invoices}")
+    invoices = Invoice.filter(order_by='TxnDate', qb=client)
+    invoice_response = []
 
-    return HttpResponse('Invoice call complete')
+    for invoice in invoices:
+        invoice = invoice.to_json()
+        invoice = json.loads(invoice)
+        invoice_response.append(json.dumps(invoice))
+    
+    token = request.session.get('refresh_token', None)
+    print(token)
+    # print(invoice_response)
+    return JsonResponse(invoice_response, safe=False)
 
 
 def list_customers(request):
@@ -237,13 +259,81 @@ def list_customers(request):
         settings.REDIRECT_URI, 
         settings.ENVIRONMENT,
     )
-    print(f"auth client created: {auth_client}")
-
     client = QuickBooks(
         auth_client=auth_client,
         refresh_token=request.session.get('refresh_token', None),
         company_id=settings.COMPANY_ID,
+        minorversion=63
     )
-    customers = Customer.all(qb=client)
-    print(f"customers: {customers}")
+    customers = Customer.filter(Active=True, qb=client)
+    customer_response =  [customer.to_json() for customer in customers]
+
+    # customer_response = json.dumps(customers)
+
+    return JsonResponse(customer_response, safe=False)
+
+def list_bills(request):
+    auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT,
+    )
+    client = QuickBooks(
+        auth_client=auth_client,
+        refresh_token=request.session.get('refresh_token', None),
+        company_id=settings.COMPANY_ID,
+        minorversion=63
+    )
+    bills = Bill.filter(qb=client)
+    print(request)
+    return HttpResponse(bills, content_type="application/json")
+
+def company_lookup(request):
+    auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT,
+    )
+    client = QuickBooks(
+        auth_client=auth_client,
+        refresh_token=request.session.get('refresh_token', None),
+        company_id=settings.COMPANY_ID,
+        minorversion=63
+    )
+    print(f"finance ID: {request.finance_id}")
+    customers = Customer.filter(Id=request.finance_id, qb=client)
     return HttpResponse(customers, content_type="application/json")
+
+def invoice_requests (request):
+
+    invoice = 1039
+    url = f"{settings.QBO_BASE_SANDBOX}/v3/company/{settings.COMPANY_ID}/invoice/{invoice}?minorversion=63"
+    
+    payload = "select * from invoice startposition 1 maxresults 5"
+    headers = {
+    'User-Agent': 'User-Agent',
+    'Accept': "application/json",
+    'Content-Type': 'application/text',
+    'Authorization': 'Bearer eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..fuluvIGsIutuCvSeQN9kuw.0Amfw5povCPacGuXmVpO9MsStaNluHnkVouEuVB4Ac3S4w6lkZpfL_quO8u9e1rrt6j7LhWeh5IFHCqbfO5-kmaplk3_23EO_RPDvO385HSqyATS3CYOq9gzXUYhusd4D3PsLHULjmCO5vGXdNnRXgumuB58mZpo2g0wYMb8wdYaQaWZTEGGXe7TDJSO582sbdEBGQx-ZPMuZ4xkEccNGrAS2AqvefBpcE9YPK6__FGaWUC4Zf4Ga2udZ0YNvJaqtppM7dD8U_C3tWQ86wspEd02HWtcxQK6az74LyAN0eWxL8H5qmPkWeeabc_jdIBQtQwIr-5fH089EI9nOrRhmoIEuSzxoq-GbTBEx_MsVGY36ca-WkN4-Rs94JE3p7xY-Js4R5MfYtXjsOcSMIl26g45SJIfRsusX1USP0Fxz-sZXwsp8fIigu5khZVd5p0DX7MVrLOWzEsC_DqEKtnAVjy_z4OJETqcD4PXP5Jt2mwsZz41K0FfoHlYmqOt5KLgpYLeyNU9O5T_I7ysPqnubmViJlFyvGNH8nH-7ponjDxhgyaYPLHyWImg_WStjB6MO6we2iemL2kiywYvvz_m7Yi0ELGW0Wy-GuV8Jx-nU_0VedFAlYD0mHLADRbuc1UcaczAm3PDG6cJIM8DE8DODM2al_6pfpB1H6zIeM4e_N4zEG3o1qd5WXZ2cv7aqjuL3vu_YRRmJnQThDwuNRYftqTqElpRNpFKytzqW0IftEo.1JvWrKgwNcZ_ZDGtcQY5hw'
+    }
+
+    # response = requests.request("POST", url, headers=headers, data=payload)
+
+    # QuickBooks Online Accounting API endpoint format:
+    # Basic format: <OPERATION> <baseURL>/v3/company/<id>/<entity>?<minorversion>
+
+    # QuickBooks Payment API endpoint format:
+    # Basic format: <OPERATION> <base URL>/quickbooks/v4/customers/<id>/<entity>
+
+def manual_company_info(request):
+    auth_client = auth_client.get_bearer_token(auth_code, realm_id=realm_id)
+    base_url = 'https://sandbox-quickbooks.api.intuit.com'
+    url = '{0}/v3/company/{1}/companyinfo/{1}'.format(base_url, auth_client.realm_id)
+    auth_header = 'Bearer {0}'.format(auth_client.access_token)
+    headers = {
+        'Authorization': auth_header,
+        'Accept': 'application/json'
+    }
+    response = requests.get(url, headers=headers)

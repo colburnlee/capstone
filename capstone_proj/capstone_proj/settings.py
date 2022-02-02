@@ -153,10 +153,4 @@ QBO_BASE_SANDBOX = 'https://sandbox-quickbooks.api.intuit.com'
 QBO_BASE_PROD = 'https://quickbooks.api.intuit.com'
 
 
-# OAuth1 config for migration
-CONSUMER_KEY = '<EnterHere>'
-CONSUMER_SECRET = '<EnterHere>'
-ACCESS_KEY = '<EnterHere>'
-ACCESS_SECRET = '<EnterHere>'
 
-REALM_ID = '<EnterHere>'
