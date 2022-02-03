@@ -23,7 +23,7 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServer
 from django.conf import settings
 from django.core import serializers
 
-from reports_app.services import qbo_api_call
+from reports_app.services import qbo_api_call, manual_call
 
 auth_client = AuthClient(
         settings.CLIENT_ID, 
@@ -32,7 +32,6 @@ auth_client = AuthClient(
         settings.ENVIRONMENT,
     )
 
-url = auth_client.get_authorization_url([Scopes.Accounting])
 # Create your views here.
 def index(request):
     return render(request, 'reports_app/index.html')
@@ -306,34 +305,27 @@ def company_lookup(request):
     customers = Customer.filter(Id=request.finance_id, qb=client)
     return HttpResponse(customers, content_type="application/json")
 
-def invoice_requests (request):
+def manual_invoice(request, transaction_number=False):
+    auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT, 
+        access_token=request.session.get('access_token', None), 
+        refresh_token=request.session.get('refresh_token', None), 
+        realm_id=request.session.get('realm_id', None),
+    )
 
-    invoice = 1039
-    url = f"{settings.QBO_BASE_SANDBOX}/v3/company/{settings.COMPANY_ID}/invoice/{invoice}?minorversion=63"
+    if auth_client.access_token is not None:
+        access_token = auth_client.access_token
+
+    if auth_client.realm_id is None:
+        raise ValueError('Realm id not specified.')
+    response = manual_call(auth_client.access_token, auth_client.realm_id, 'invoice', transaction_number)
+    # print(response)
+    # print(settings.COMPANY_ID)
     
-    payload = "select * from invoice startposition 1 maxresults 5"
-    headers = {
-    'User-Agent': 'User-Agent',
-    'Accept': "application/json",
-    'Content-Type': 'application/text',
-    'Authorization': 'Bearer eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..fuluvIGsIutuCvSeQN9kuw.0Amfw5povCPacGuXmVpO9MsStaNluHnkVouEuVB4Ac3S4w6lkZpfL_quO8u9e1rrt6j7LhWeh5IFHCqbfO5-kmaplk3_23EO_RPDvO385HSqyATS3CYOq9gzXUYhusd4D3PsLHULjmCO5vGXdNnRXgumuB58mZpo2g0wYMb8wdYaQaWZTEGGXe7TDJSO582sbdEBGQx-ZPMuZ4xkEccNGrAS2AqvefBpcE9YPK6__FGaWUC4Zf4Ga2udZ0YNvJaqtppM7dD8U_C3tWQ86wspEd02HWtcxQK6az74LyAN0eWxL8H5qmPkWeeabc_jdIBQtQwIr-5fH089EI9nOrRhmoIEuSzxoq-GbTBEx_MsVGY36ca-WkN4-Rs94JE3p7xY-Js4R5MfYtXjsOcSMIl26g45SJIfRsusX1USP0Fxz-sZXwsp8fIigu5khZVd5p0DX7MVrLOWzEsC_DqEKtnAVjy_z4OJETqcD4PXP5Jt2mwsZz41K0FfoHlYmqOt5KLgpYLeyNU9O5T_I7ysPqnubmViJlFyvGNH8nH-7ponjDxhgyaYPLHyWImg_WStjB6MO6we2iemL2kiywYvvz_m7Yi0ELGW0Wy-GuV8Jx-nU_0VedFAlYD0mHLADRbuc1UcaczAm3PDG6cJIM8DE8DODM2al_6pfpB1H6zIeM4e_N4zEG3o1qd5WXZ2cv7aqjuL3vu_YRRmJnQThDwuNRYftqTqElpRNpFKytzqW0IftEo.1JvWrKgwNcZ_ZDGtcQY5hw'
-    }
-
-    # response = requests.request("POST", url, headers=headers, data=payload)
-
-    # QuickBooks Online Accounting API endpoint format:
-    # Basic format: <OPERATION> <baseURL>/v3/company/<id>/<entity>?<minorversion>
-
-    # QuickBooks Payment API endpoint format:
-    # Basic format: <OPERATION> <base URL>/quickbooks/v4/customers/<id>/<entity>
-
-def manual_company_info(request):
-    auth_client = auth_client.get_bearer_token(auth_code, realm_id=realm_id)
-    base_url = 'https://sandbox-quickbooks.api.intuit.com'
-    url = '{0}/v3/company/{1}/companyinfo/{1}'.format(base_url, auth_client.realm_id)
-    auth_header = 'Bearer {0}'.format(auth_client.access_token)
-    headers = {
-        'Authorization': auth_header,
-        'Accept': 'application/json'
-    }
-    response = requests.get(url, headers=headers)
+    if not response.ok:
+        return HttpResponse(' '.join([response.content, str(response.status_code)]))
+    else:
+        return HttpResponse(response.content, content_type="application/json")

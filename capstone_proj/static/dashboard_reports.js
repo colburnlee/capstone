@@ -8,13 +8,19 @@ var app = new Vue({
       listCustomerData: "",
       listBillData: [],
       lookupCompany: [],
-      companyTest: '',
+      manualInvoice: [],
+      manualInvoiceCompany: "",
+      transactionNumber: "",
+      manualInvoiceLineItems: "",
     },
 
     created () {
         axios
             .get("/qbo_request/")
-            .then(response => (this.parentCompanyData = response))
+            .then(response => {
+              this.parentCompanyData = response
+              // console.log(this.parentCompanyData)
+            })
     },
 
     methods: {
@@ -66,18 +72,18 @@ var app = new Vue({
           .then(response => (this.lookupCompany = JSON.stringify(response)))
       },
 
-      manualCompanyLookup: function() {
-        this.companyTest = "loading..."
+      manualCompanyInvoice: function(transactionNumber) {
+        this.manualInvoice = "loading..."
+        this.manualInvoiceCompany = "loading..."
+        console.log(transactionNumber)
         axios
-          .get("/manual_company_info/")
-          .then(response => this.companyTest = JSON.stringify(response))
+          .get(`/manual_invoice/${transactionNumber}`)
+          .then(response => {
+            this.manualInvoice= response
+            this.manualInvoiceCompany = this.manualInvoice.data.Invoice.CustomerRef.name
+            this.manualInvoiceLineItems = this.manualInvoice.data.Invoice.Line
+          })
+          .catch(error => {console.log(error)})
       },
-
       }
-    
-
-    
-
 })
-  
-  console.log(app)

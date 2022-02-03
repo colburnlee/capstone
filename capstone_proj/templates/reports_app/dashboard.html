@@ -114,6 +114,42 @@
                     </div>
                 </div>
 
+                <!-- Pear Suite Invoice Lookup Button: -->
+                
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manualCompanyInvoiceLookup" >
+                    Invoice Lookup
+                </button>
+                
+                <!-- Pear Suite Invoice Lookup Modal: -->
+                <div class="modal fade" id="manualCompanyInvoiceLookup" tabindex="-1" aria-labelledby="manualCompanyInvoiceLookupLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title text-dark" id="manualCompanyInvoiceLookupLabel"> Invoice Lookup </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-dark">
+                            <input v-model.number="transactionNumber" type="number">
+                            
+                            <!-- [[ manualInvoice ]] -->
+                            [[ manualInvoiceCompany ]]
+                            <!-- [[ manualInvoiceLineItems ]] -->
+                            <p v-for="value in manualInvoiceLineItems">
+                                ID: [[ value.Id ]] <br>
+                                Product: [[ value.Description ]]<br>
+                                Unit Price: [[ value ]]<br>
+                                Quantity Purchased:[[ value.SalesItemLineDetail ]]<br>
+                            </p>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button v-on:click="manualCompanyInvoice(transactionNumber)" type="button text-dark" class="btn btn-primary" >Lookup Invoice</button>
+                        <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
                 <br><br>
                 Reporting:
                 <div>
@@ -121,7 +157,7 @@
                     <button v-on:click="refreshCurrentToken()">Refresh Token Call</button>
                     <button v-on:click="listBills()">See Bills</button>
                     <button v-on:click="lookupCompanyById()">Lookup Company by ID</button>
-                    <button v-on:click="manualCompanyLookup()">Manual Company Lookup</button>
+                    <button v-on:click="manualCompanyInvoice()">Manual Company Invoice Lookup</button>
                     <button v-on:click="">List Customers Call</button>
                     
                     <br><br> 
@@ -131,7 +167,7 @@
                     [[ refreshToken ]]
                     [[ listBillData ]]
                     [[ lookupCompany ]]
-                    [[ companyTest ]]
+                    
 
                         
                     
