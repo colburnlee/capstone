@@ -221,6 +221,7 @@ def migration(request):
 
 
 def invoice(request):
+    """Returns all invoices"""
     auth_client = AuthClient(
         settings.CLIENT_ID, 
         settings.CLIENT_SECRET, 
@@ -244,51 +245,54 @@ def invoice(request):
         invoice = invoice.to_json()
         invoice = json.loads(invoice)
         invoice_response.append(json.dumps(invoice))
-    
-    token = request.session.get('refresh_token', None)
-    print(token)
-    # print(invoice_response)
-    return JsonResponse(invoice_response, safe=False)
+    print(invoice_response)
+
+    return HttpResponse(invoice_response, content_type="application/json")
 
 
 def list_customers(request):
+    """Returns querey customer for all active customers"""
     auth_client = AuthClient(
         settings.CLIENT_ID, 
         settings.CLIENT_SECRET, 
         settings.REDIRECT_URI, 
         settings.ENVIRONMENT,
+        realm_id=request.session.get('realm_id', None),
+        access_token=request.session.get('access_token', None), 
+        refresh_token=request.session.get('refresh_token', None), 
     )
-    client = QuickBooks(
-        auth_client=auth_client,
-        refresh_token=request.session.get('refresh_token', None),
-        company_id=settings.COMPANY_ID,
-        minorversion=63
-    )
-    customers = Customer.filter(Active=True, qb=client)
-    customer_response =  [customer.to_json() for customer in customers]
 
-    # customer_response = json.dumps(customers)
+    if auth_client.access_token is not None:
+        access_token = auth_client.access_token
+    if auth_client.realm_id is None:
+        raise ValueError('Realm id not specified.')    
 
-    return JsonResponse(customer_response, safe=False)
+    auth_header = 'Bearer {0}'.format(access_token)
+    headers = {
+        'Authorization': auth_header, 
+        'Accept': 'application/json'
+    }
+    if settings.ENVIRONMENT == 'production':
+        base_url = settings.QBO_BASE_PROD
+    else:
+        base_url =  settings.QBO_BASE_SANDBOX
 
-def list_bills(request):
-    auth_client = AuthClient(
-        settings.CLIENT_ID, 
-        settings.CLIENT_SECRET, 
-        settings.REDIRECT_URI, 
-        settings.ENVIRONMENT,
-    )
-    client = QuickBooks(
-        auth_client=auth_client,
-        refresh_token=request.session.get('refresh_token', None),
-        company_id=settings.COMPANY_ID,
-        minorversion=63
-    )
-    bills = Bill.filter(qb=client)
-    print(request)
-    return HttpResponse(bills, content_type="application/json")
+    route = '/v3/company/{0}/{1}?{2}&minorversion=63'.format(auth_client.realm_id, 'query', 'select * from Customer Where Active = True')
+    print(base_url+route)
+    response = requests.get('{0}{1}'.format(base_url, route), headers=headers)
+    print(response)
+    # print(settings.COMPANY_ID)
+    # /v3/company/4620816365212855650/query?query=select * from Customer Where Active = True&minorversion=63
+    
+    
+    
+    if not response.ok:
+        return HttpResponse(' '.join([response.content, str(response.status_code)]))
+    else:
+        return HttpResponse(response.content, content_type="application/json")
 
 def company_lookup(request):
+    """CONSIDER DELETION"""
     auth_client = AuthClient(
         settings.CLIENT_ID, 
         settings.CLIENT_SECRET, 
@@ -329,3 +333,220 @@ def manual_invoice(request, transaction_number=False):
         return HttpResponse(' '.join([response.content, str(response.status_code)]))
     else:
         return HttpResponse(response.content, content_type="application/json")
+
+def read_customer(request, finance_id=5):
+    '''Takes in Auth Client and finance Id to return customer information as JSON'''
+
+    auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT, 
+        access_token=request.session.get('access_token', None), 
+        refresh_token=request.session.get('refresh_token', None), 
+        realm_id=request.session.get('realm_id', None),
+    )
+
+    if auth_client.access_token is not None:
+        access_token = auth_client.access_token
+
+    if auth_client.realm_id is None:
+        raise ValueError('Realm id not specified.')
+    
+    response = manual_call(auth_client.access_token, auth_client.realm_id, 'customer', finance_id)
+    print(response)
+    # print(settings.COMPANY_ID)
+    
+    if not response.ok:
+        return HttpResponse(' '.join([response.content, str(response.status_code)]))
+    else:
+        return HttpResponse(response.content, content_type="application/json")
+
+
+def auth_header(request):
+    auth_client = AuthClient(
+    settings.CLIENT_ID, 
+    settings.CLIENT_SECRET, 
+    settings.REDIRECT_URI, 
+    settings.ENVIRONMENT,
+    realm_id=request.session.get('realm_id', None),
+    access_token=request.session.get('access_token', None), 
+    refresh_token=request.session.get('refresh_token', None), 
+    )
+    access_token = auth_client.access_token
+
+    auth_header = 'Bearer {0}'.format(access_token)
+    # headers = {
+    #     'Authorization': auth_header, 
+    #     'Accept': 'application/json'
+    # }
+    print(f"bearer token updated: {auth_header}")
+    return HttpResponse(auth_header)
+
+
+
+def sparse_update_customer(request):
+    """Takes in context to update profile, converts to JSON, attempts to update profile"""
+    auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT, 
+        access_token=request.session.get('access_token', None), 
+        refresh_token=request.session.get('refresh_token', None), 
+        realm_id=request.session.get('realm_id', None),
+    )
+
+    if auth_client.access_token is not None:
+        access_token = auth_client.access_token
+
+    if auth_client.realm_id is None:
+        raise ValueError('Realm id not specified.')
+    
+    if settings.ENVIRONMENT == 'production':
+        base_url = settings.QBO_BASE_PROD
+    else:
+        base_url =  settings.QBO_BASE_SANDBOX
+
+    route = '/v3/company/{0}/{1}?minorversion=63'.format(auth_client.realm_id, 'customer') 
+    auth_header = 'Bearer {0}'.format(access_token)
+
+    headers = {
+        'Authorization': auth_header, 
+        'Accept': 'application/json',
+        'Content-Type': 'application/json', 
+    }
+
+    body = request
+
+
+    response = requests.post('{0}{1}'.format(base_url, route), headers=headers, data=body)
+
+    return HttpResponse(response.content, content_type="application/json")
+
+def create_new_customer(request):
+    """Takes in context to create new customer entry, converts to JSON. Returns customer entry"""
+    auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT, 
+        access_token=request.session.get('access_token', None), 
+        refresh_token=request.session.get('refresh_token', None), 
+        realm_id=request.session.get('realm_id', None),
+    )
+
+    if auth_client.access_token is not None:
+        access_token = auth_client.access_token
+
+    if auth_client.realm_id is None:
+        raise ValueError('Realm id not specified.')
+    
+    if settings.ENVIRONMENT == 'production':
+        base_url = settings.QBO_BASE_PROD
+    else:
+        base_url =  settings.QBO_BASE_SANDBOX
+
+    route = '/v3/company/{0}/{1}?minorversion=63'.format(auth_client.realm_id, 'customer') 
+    auth_header = 'Bearer {0}'.format(access_token)
+
+    headers = {
+        'Authorization': auth_header, 
+        'Accept': 'application/json',
+        'Content-Type': 'application/json', 
+    }
+
+    body = request
+
+    response = requests.post('{0}{1}'.format(base_url, route), headers=headers, data=body)
+
+    print(f"request: {request}")
+
+    return HttpResponse(response.content, content_type="application/json")
+
+def create_new_invoice(request):
+    """Takes in context to create new service invoice, converts to JSON. Returns customer ID and Invoice number"""
+
+    auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT, 
+        access_token=request.session.get('access_token', None), 
+        refresh_token=request.session.get('refresh_token', None), 
+        realm_id=request.session.get('realm_id', None),
+    )
+
+    if auth_client.access_token is not None:
+        access_token = auth_client.access_token
+
+    if auth_client.realm_id is None:
+        raise ValueError('Realm id not specified.')
+    
+    if settings.ENVIRONMENT == 'production':
+        base_url = settings.QBO_BASE_PROD
+    else:
+        base_url =  settings.QBO_BASE_SANDBOX
+
+    route = '/v3/company/{0}/{1}'.format(auth_client.realm_id, 'invoice') 
+    # /v3/company/<realmID>/invoice
+    auth_header = 'Bearer {0}'.format(access_token)
+
+    headers = {
+        'Authorization': auth_header, 
+        'Accept': 'application/json',
+        'Content-Type': 'application/json', 
+    }
+
+    body = request
+
+    response = requests.post('{0}{1}'.format(base_url, route), headers=headers, data=body)
+
+    print(f"POST request to: {base_url}{route}")
+
+    return HttpResponse(response.content, content_type="application/json")
+
+def email_invoice(request, invoice_id, email_address):
+    """Takes in email addresss and ID number to send """
+
+    auth_client = AuthClient(
+        settings.CLIENT_ID, 
+        settings.CLIENT_SECRET, 
+        settings.REDIRECT_URI, 
+        settings.ENVIRONMENT, 
+        access_token=request.session.get('access_token', None), 
+        refresh_token=request.session.get('refresh_token', None), 
+        realm_id=request.session.get('realm_id', None),
+    )
+
+    if auth_client.access_token is not None:
+        access_token = auth_client.access_token
+
+    if auth_client.realm_id is None:
+        raise ValueError('Realm id not specified.')
+    
+    if settings.ENVIRONMENT == 'production':
+        base_url = settings.QBO_BASE_PROD
+    else:
+        base_url =  settings.QBO_BASE_SANDBOX
+
+    route = '/v3/company/{0}/{1}/{2}/send?sendTo={3}&minorversion=63'.format(auth_client.realm_id, 'invoice', invoice_id, email_address) 
+
+    # /v3/company/<realmID> {0} /invoice {1} /<invoiceId> {2} /send?sendTo=<emailAddr> {3}
+
+    auth_header = 'Bearer {0}'.format(access_token)
+
+    headers = {
+        'Authorization': auth_header, 
+        'Accept': 'application/json',
+        'Content-Type': 'application/octet-stream', 
+    }
+
+    body = request
+
+    response = requests.post('{0}{1}'.format(base_url, route), headers=headers)
+
+    print(f"POST request to: {base_url}{route}")
+
+
+    return HttpResponse(response.content, content_type="application/json")

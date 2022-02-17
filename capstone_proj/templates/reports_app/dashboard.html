@@ -1,25 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-        
-        <script>           
-            function revokeCall() {
-                $("#result").html('Loading...')
-                $.get("/revoke/", function (data) {
-                    $("#result").html(data)
-                })
-            }
-
-            function refreshCall() {
-                $("#result").html('Loading...')
-                $.get("/refresh/", function (data) {
-                    $("#result").html(JSON.stringify(data, null, 2))
-                })
-            }
-        </script>
-
 <div class="col" id="app">
     <h1 class="h1">Finance Dashboard</h1>
     <div class="card text-white bg-secondary border-dark mt-4 shadow">
@@ -27,159 +8,445 @@
 
         </div>
         <div class="card-body">
-            <h5 class="card-title text-center"><b>Information</b></h5>          
+            <h5 class="card-title text-center"><b>Information</b></h5>
             <p class="card-text text-end">
-                
+
                 Name: {{user.first_name}} {{user.last_name}} <br>
                 Username: {{user.username}} <br>
                 Email Address: {{user.email}} <br>
                 Finance ID: {{user.finance_id}} <br>
                 Service End Date: {{user.end_date}} <br><br>
-                
+
+            <div class="div">
+                All Users view:<br>
                 <!-- Pear Suite Contact Info Button -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#parentCompanyInfo">
-                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Contact Info
+                <button v-on:click="getParentCompanyData()" type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#parentCompanyInfo">
+                    Pear Suite Contact Info
                 </button>
 
-                <!-- Pear Suite Contact Info Modal -->
-                <div class="modal fade" id="parentCompanyInfo" tabindex="-1" aria-labelledby="parentCompanyInfoLabel" aria-hidden="true">
-                    <div class="modal-dialog">
+                <!-- Pear Suite Invoice Lookup Button: -->
+                <!-- Examples: Transaction 130, 129 -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#manualCompanyInvoiceLookup">
+                    Invoice Lookup
+                </button>
+
+                <!-- Refresh Token Button: -->
+                <button v-on:click="refreshCurrentToken()" type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#refreshTokenCall">
+                    Refresh Current Session
+                </button>
+
+                <!-- Customer Info Lookup Button: -->
+                <button v-on:click="lookupCustomerById({{user.finance_id}})" type="button" class="btn btn-primary"
+                    data-bs-toggle="modal" data-bs-target="#modalCustomerInformation">
+                    Lookup/Update My Info
+                </button>
+            </div> 
+            
+
+            <br>
+
+            <div class="div my-2">
+                Admin View:<br>
+
+                <!-- Pear Suite Lookup Customer By ID Button: -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#manualReadCustomerById">
+                    Lookup Customer By ID
+                </button>
+
+                <!-- Pear Suite Create New Customer Button: -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#createNewCustomerModal">
+                    Create New Customer
+                </button>
+
+                <!-- Pear Suite Admin - Create Service Invoice Button: -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#createNewInvoiceModal">
+                    Create a Service Invoice
+                </button>
+
+            </div>
+
+            <!-- Pear Suite Contact Info Modal -->
+            <div class="modal fade" id="parentCompanyInfo" tabindex="-1" aria-labelledby="parentCompanyInfoLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                        <h5 class="modal-title text-dark" id="parentCompanyInfoLabel">[[ parentCompanyData.data.CompanyInfo.LegalName ]]</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h5 class="modal-title text-dark" id="parentCompanyInfoLabel">Pear Suite</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body text-dark">
                             Address:
-                            <br> 
-                            [[ parentCompanyData.data.CompanyInfo.CompanyAddr.Line1 ]] <br>
-                            [[ parentCompanyData.data.CompanyInfo.CompanyAddr.City ]], [[ parentCompanyData.data.CompanyInfo.CompanyAddr.CountrySubDivisionCode ]] [[ parentCompanyData.data.CompanyInfo.CompanyAddr.PostalCode ]]
+                            <br>
+                            [[ parentCompanyAddressLine1 ]] <br>
+                            [[ parentCompanyAddressCity ]], [[ parentCompanyAddressCountrySubdivisionCode ]] [[
+                            parentCompanyAddressPostalCode ]]
                             <br><br>
-                            Email: [[ parentCompanyData.data.CompanyInfo.Email.Address ]]
-                            
+                            Email: [[ parentCompanyAddressEmailAddress ]]
+
                         </div>
                         <div class="modal-footer">
-                        <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button text-dark" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Close</button>
                         </div>
-                    </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Pear Suite Total Invoice History: Button -->
-                <button v-on:click="invoiceRequest()" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#invoiceInfo" >
-                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Invoice History
-                </button>
-                
-                <!-- Pear Suite Total Invoice History: Modal -->
-                <div class="modal fade" id="invoiceInfo" tabindex="-1" aria-labelledby="invoiceInfoLabel" aria-hidden="true">
-                    <div class="modal-dialog">
+            <!-- Pear Suite Invoice Lookup Modal: -->
+            <div class="modal fade" id="manualCompanyInvoiceLookup" tabindex="-1"
+                aria-labelledby="manualCompanyInvoiceLookupLabel" aria-hidden="true">
+                <div class="modal-dialog">
                     <div class="modal-content">
-                        <div class="modal-header">
-                        <h5 class="modal-title text-dark" id="invoiceInfoLabel"> Invoice </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body text-dark">
-                            [[ invoiceData ]]
-                            <!-- <p v-for="value in invoiceData">[[value]]</p>  -->
-                        </div>
-                        <div class="modal-footer">
-                        <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                    </div>
-                </div>
 
-                <!-- Pear Suite Current Customers Button: -->
-                
-                <button v-on:click="listCustomers()" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#currentCustomerInfo" >
-                    [[ parentCompanyData.data.CompanyInfo.LegalName ]] Current Customers
-                </button>
-                
-                <!-- Pear Suite Current Customers Modal: -->
-                <div class="modal fade" id="currentCustomerInfo" tabindex="-1" aria-labelledby="currentCustomerInfoLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                    <div class="modal-content">
                         <div class="modal-header">
-                        <h5 class="modal-title text-dark" id="currentCustomerInfoLabel"> Current Customers </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h5 class="modal-title text-dark" id="manualCompanyInvoiceLookupLabel"> Invoice Lookup </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body text-dark">
-                            
-                            [[ listCustomerData ]]
-                        </div>
-                        <div class="modal-footer">
-                        <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                    </div>
-                </div>
 
-                <!-- Pear Suite Invoice Lookup Button: -->
-                
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#manualCompanyInvoiceLookup" >
-                    Invoice Lookup
-                </button>
-                
-                <!-- Pear Suite Invoice Lookup Modal: -->
-                <div class="modal fade" id="manualCompanyInvoiceLookup" tabindex="-1" aria-labelledby="manualCompanyInvoiceLookupLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                        <h5 class="modal-title text-dark" id="manualCompanyInvoiceLookupLabel"> Invoice Lookup </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
                         <div class="modal-body text-dark">
-                            <input v-model.number="transactionNumber" type="number">
-                            
-                            <!-- [[ manualInvoice ]] -->
-                            [[ manualInvoiceCompany ]]
-                            <!-- [[ manualInvoiceLineItems ]] -->
-                            <p v-for="value in manualInvoiceLineItems">
-                                ID: [[ value.Id ]] <br>
-                                Product: [[ value.Description ]]<br>
-                                Unit Price: [[ value ]]<br>
-                                Quantity Purchased:[[ value.SalesItemLineDetail ]]<br>
+
+                            <input v-model.number="transactionNumber" type="number" placeholder="Transaction number">
+                            <!-- Examples: Transaction 130, 129. Work on 149 -->
+                            <i v-if="!manualInvoiceLink"><br><br>Enter a Transaction Id above to find details on
+                                file</i>
+
+                            <p v-if="manualInvoiceCompany"><br><br>
+                                {% csrf_token %}
+                                <button @click="SendExistingInvoiceOption = !SendExistingInvoiceOption">Email this invoice</button> <input v-if="SendExistingInvoiceOption" v-model.trim="SendExistingInvoiceEmail"  placeholder="user@name.com"><br>
+                                Billed to: [[ manualInvoiceCompany ]]<br>
+
+                                <a v-if="manualInvoiceAddressCity">[[ manualInvoiceAddressLine1 ]] <br>
+                                    [[ manualInvoiceAddressCity ]] [[ manualInvoiceAddressCountrySubDivisionCode ]] [[
+                                    manualInvoiceAddressPostalCode ]]</a>
+
+                                <a v-if="manualInvoiceAddressLine3">[[ manualInvoiceAddressLine1 ]] <br> [[
+                                    manualInvoiceAddressLine2 ]] [[ manualInvoiceAddressLine3 ]] [[
+                                    manualInvoiceAddressLine4 ]]</a>
+                                <br>
+
+                                Transaction Date: [[ manualInvoiceTransactionDate ]]<br>
+                                Total Due: $[[ manualInvoiceTotalAmt ]]<br>
+                                Due Date: [[ manualInvoiceDueDate ]]<br><br>
+                                Items Sold:
+                            </p>
+
+                            <p v-if="manualInvoiceLink" v-for="value in manualInvoiceLineItems">[[ value.Description ]]
                             </p>
 
                         </div>
+
                         <div class="modal-footer">
-                            <button v-on:click="manualCompanyInvoice(transactionNumber)" type="button text-dark" class="btn btn-primary" >Lookup Invoice</button>
-                        <button type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button v-show="SendExistingInvoiceEmail" v-on:click="SendExistingInvoice(), clearInvoiceRequest(), SendExistingInvoiceEmail=''"
+                                type="button text-dark" class="btn btn-warning">Email: [[ SendExistingInvoiceEmail ]] </button>
+                            <button v-on:click="clearInvoiceRequest(), manualCompanyInvoice(transactionNumber)"
+                                type="button text-dark" class="btn btn-primary">Lookup Invoice</button>
+                            <button v-on:click="clearInvoiceRequest(),manualInvoiceLink=false,SendExistingInvoiceEmail=''" type="button text-dark"
+                                class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
-                    </div>
+
                     </div>
                 </div>
+            </div>
 
-                <br><br>
-                Reporting:
-                <div>
-                    
-                    <button v-on:click="refreshCurrentToken()">Refresh Token Call</button>
-                    <button v-on:click="listBills()">See Bills</button>
-                    <button v-on:click="lookupCompanyById()">Lookup Company by ID</button>
-                    <button v-on:click="manualCompanyInvoice()">Manual Company Invoice Lookup</button>
-                    <button v-on:click="">List Customers Call</button>
-                    
-                    <br><br> 
-                    <div id="result"></div> 
-                    
-                    <div class=""></div>
-                    [[ refreshToken ]]
-                    [[ listBillData ]]
-                    [[ lookupCompany ]]
-                    
+            <!-- Pear Suite Lookup Customer By ID Modal: -->
+            <div class="modal fade" id="manualReadCustomerById" tabindex="-1"
+                aria-labelledby="manualReadCustomerByIdLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title text-dark" id="manualReadCustomerByIdLabel"> Lookup Customer By Id
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body text-dark">
+
+                            <input v-model.number="manualCustomerLookupId" type="number"
+                                placeholder="Finance Id number">
+
+                            <!-- This is the view to view customer info -->
+                            <div v-show="manualCustomerLookupView" class="modal-body text-dark">
+                                <p v-if="manualCustomerLookup"><br><br>Email Address:<a
+                                        v-bind:href="[[manualCustomerLookupPrimaryEmailAddr]]"> [[
+                                        this.manualCustomerLookupPrimaryEmailAddr]]</a><br>
+                                    Business Name: [[ this.manualCustomerLookupDisplayName]]<br>
+                                    POC: [[ this.manualCustomerLookupGivenName]] [[
+                                    this.manualCustomerLookupFamilyName]]<br>
+                                    Phone Number: [[ this.manualCustomerLookupPrimaryPhone]]<br>
+                                    Active Customer: [[ this.manualCustomerLookupActive]]<br>
+                                    <a v-if="manualCustomerLookupBillAddr">Billing Address: [[
+                                        this.manualCustomerLookupBillAddr ]]</a>
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div v-show="manualCustomerLookupEdit" class="modal-body text-dark">
+                            {% csrf_token %}
+                            Business Name: <input v-model="manualCustomerLookupDisplayName"
+                                placeholder="manualCustomerLookupDisplayName"><br>
+
+                            POC First Name: <input v-model="manualCustomerLookupGivenName"
+                                placeholder="manualCustomerLookupGivenName"><br>
+
+                            POC Last Name: <input v-model="manualCustomerLookupFamilyName"
+                                placeholder="manualCustomerLookupFamilyName"><br>
+
+                            POC Email: <input v-model="manualCustomerLookupPrimaryEmailAddr"
+                                placeholder="manualCustomerLookupPrimaryEmailAddr"><br>
+
+                            Phone Number: <input v-model="manualCustomerLookupPrimaryPhone"
+                                placeholder="manualCustomerLookupPrimaryPhone"><br>
+
+                            Street Address: <input v-model="manualCustomerLookupBillAddrStreet"
+                                placeholder="manualCustomerLookupBillAddrStreet"><br>
+
+                            City: <input v-model="manualCustomerLookupBillAddrCity"
+                                placeholder="manualCustomerLookupBillAddrCity"><br>
+
+                            State/Country: <input v-model="manualCustomerLookupBillAddrCountrySubDivisionCode"
+                                placeholder="manualCustomerLookupBillAddrCountrySubDivisionCode"><br>
+
+                            Postal Code: <input v-model="manualCustomerLookupBillAddrPostalCode"
+                                placeholder="manualCustomerLookupBillAddrPostalCode"><br>
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button v-if="manualCustomerLookup=this.manualCustomerLookup"
+                                v-on:click="manualCustomerLookupEdit=true, manualCustomerLookupView=false, manualCustomerLookupEditButton=true"
+                                v-show="!manualCustomerLookupEditButton" type="button text-dark"
+                                class="btn btn-danger">Update this ID</button>
+
+                            <button
+                                v-on:click="sparseUpdateCustomer(), manualCustomerLookupEdit=false, manualCustomerLookupView=true, manualCustomerLookupEditButton=false"
+                                v-show="manualCustomerLookupEditButton" type="button text-dark"
+                                class="btn btn-danger">Submit Info Update</button>
+
+                            <button
+                                v-on:click="lookupCustomerById(manualCustomerLookupId), manualCustomerLookupEdit=false, manualCustomerLookupView=true, manualCustomerLookupEditButton=false"
+                                type="button text-dark" class="btn btn-primary">Lookup ID</button>
+
+                            <button
+                                v-on:click="manualCustomerLookupEdit=false, manualCustomerLookupView=true, manualCustomerLookupEditButton=false"
+                                type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pear Suite Create New Customer Modal: -->
+            <div class="modal fade" id="createNewCustomerModal" tabindex="-1"
+                aria-labelledby="createNewCustomerModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title text-dark" id="createNewCustomerModalLabel"> Create New Customer
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body text-dark">
+                            [[ newCustomerSuccess ]]
+                            [[ newCustomerSubmitted ]]
+
+                            <div v-show="newCustomerEditModal">
+                                {% csrf_token %}
+                                Business Name: <input v-model="newFullyQualifiedName" placeholder="King Groceries"><br>
+                                Email Address: <input v-model="newPrimaryEmailAddr" placeholder="jdrew@myemail.com"><br>
+                                Business Display Name: <input v-model="newDisplayName"
+                                    placeholder="King's Groceries"><br>
+                                Suffix: <input v-model="newSuffix" placeholder="Jr., Sr."><br>
+                                Title: <input v-model="newTitle" placeholder="Mr, Mrs"><br>
+                                Given Name: <input v-model="newGivenName" placeholder="John"><br>
+                                Middle Name: <input v-model="newMiddleName" placeholder="Wesley"><br>
+                                Family Name: <input v-model="newFamilyName" placeholder="Harding"><br>
+                                Phone Number: <input v-model="newFreeFormNumber" placeholder="(123) 456-7890"><br>
+
+
+                                Street Address: <input v-model="newLine1" placeholder="155 Paper St."><br>
+                                City: <input v-model="newCity" placeholder="Pearlando"><br>
+                                State: <input v-model="newCountrySubDivisionCode" placeholder="FL"><br>
+                                Zip Code: <input v-model="newPostalCode" placeholder="98115"><br>
+                                Country: <input v-model="newCountry" placeholder="USA"><br>
+                                <br>
+                                Note: <textarea v-model="newNotes" placeholder="Note"></textarea>
+                            </div>
+
+
+
+                            <div class="modal-footer">
+                                <button v-show="newCustomerEditModal"
+                                    v-on:click="createNewCustomer(), newCustomerEditModal=false" type="button text-dark"
+                                    class="btn btn-danger">Submit New Customer</button>
+
+                                <button v-on:click="clearNewCustomer(), newCustomerEditModal=true"
+                                    type="button text-dark" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Close</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Refresh Token Call: Modal -->
+            <div class="modal fade" id="refreshTokenCall" tabindex="-1" aria-labelledby="refreshTokenCallLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-dark" id="refreshTokenCallLabel"> Invoice </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-dark">
+                            [[ refreshToken ]]
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button text-dark" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Info Lookup Modal: -->
+            <div class="modal fade" id="modalCustomerInformation" tabindex="-1"
+                aria-labelledby="modalCustomerInformationLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title text-dark" id="modalCustomerInformationLabel"> Information on
+                                File </h5>
+                        </div>
+
+                        <div v-show="manualCustomerLookupView" class="modal-body text-dark">
+
+                            <p v-if="manualCustomerLookup">Email Address:<a
+                                    v-bind:href="[[manualCustomerLookupPrimaryEmailAddr]]">
+                                    [[manualCustomerLookupPrimaryEmailAddr]]</a><br>
+                                Business Name: [[manualCustomerLookupDisplayName]]<br>
+                                POC: [[manualCustomerLookupGivenName]] [[manualCustomerLookupFamilyName]]<br>
+                                Phone Number: [[manualCustomerLookupPrimaryPhone]]<br>
+                                Active Customer: [[manualCustomerLookupActive]]<br>
+                            </p>
+                            <p v-if="manualCustomerLookupBillAddr">Billing Address: [[ manualCustomerLookupBillAddr
+                                ]]</p>
+
+
+                        </div>
+
+                        <div v-show="manualCustomerLookupEdit" class="modal-body text-dark">
+                            {% csrf_token %}
+                            Business Name: <input v-model="manualCustomerLookupDisplayName"
+                                placeholder="manualCustomerLookupDisplayName"><br>
+
+                            POC First Name: <input v-model="manualCustomerLookupGivenName"
+                                placeholder="manualCustomerLookupGivenName"><br>
+
+                            POC Last Name: <input v-model="manualCustomerLookupFamilyName"
+                                placeholder="manualCustomerLookupFamilyName"><br>
+
+                            POC Email: <input v-model="manualCustomerLookupPrimaryEmailAddr"
+                                placeholder="manualCustomerLookupPrimaryEmailAddr"><br>
+
+                            Phone Number: <input v-model="manualCustomerLookupPrimaryPhone"
+                                placeholder="manualCustomerLookupPrimaryPhone"><br>
+
+                            Street Address: <input v-model="manualCustomerLookupBillAddrStreet"
+                                placeholder="manualCustomerLookupBillAddrStreet"><br>
+
+                            City: <input v-model="manualCustomerLookupBillAddrCity"
+                                placeholder="manualCustomerLookupBillAddrCity"><br>
+
+                            State/Country: <input v-model="manualCustomerLookupBillAddrCountrySubDivisionCode"
+                                placeholder="manualCustomerLookupBillAddrCountrySubDivisionCode"><br>
+
+                            Postal Code: <input v-model="manualCustomerLookupBillAddrPostalCode"
+                                placeholder="manualCustomerLookupBillAddrPostalCode"><br>
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button v-show="!manualCustomerLookupEdit"
+                                v-on:click="manualCustomerLookupEdit=!manualCustomerLookupEdit, manualCustomerLookupView=!manualCustomerLookupView"
+                                type="button text-dark" class="btn btn-primary">Update my billing info</button>
+
+                            <button
+                                v-on:click="sparseUpdateCustomer(), manualCustomerLookupEdit=false, manualCustomerLookupView=true"
+                                v-show="manualCustomerLookupEdit" type="button text-dark" data-bs-dismiss="modal"
+                                class="btn btn-danger">Update Information</button>
+
+                            <button v-on:click="manualCustomerLookupEdit=false, manualCustomerLookupView=true"
+                                type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pear Suite Admin - Create Service Invoice Button: -->
+            <div class="modal fade" id="createNewInvoiceModal" tabindex="-1"
+                aria-labelledby="createNewInvoiceModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title text-dark" id="createNewInvoiceModalLabel"> Create a Service
+                                Invoice </h5>
+                        </div>
 
                         
-                    
-            </p>
+                        <div v-show="newInvoiceView" class="modal-body text-dark">
 
+                            {% csrf_token %}
+                            Business ID: <input v-model="newInvoiceCustomerId" placeholder="Enter Number ID"><br>
+                            Cost of Services: <input v-model="newInvoiceAmount"
+                                placeholder="Enter Dollar Value"><br>
+
+
+                        </div>
+
+                        <div class="text-dark mx-2">
+                        <p class="text-dark">[[ newInvoiceSuccess ]]</p>
+                        </div>
+
+                        <div class="modal-footer">
+
+                            <button v-on:click="createNewInvoice(), newInvoiceView=false" v-show="newInvoiceView"
+                                type="button text-dark" class="btn btn-danger">Submit
+                                Invoice</button>
+
+                            <button v-on:click="clearNewInvoice(), newInvoiceView=true" type="button text-dark"
+                                class="btn btn-secondary" data-bs-dismiss="modal">Close </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+                </p>
+            </div>
         </div>
     </div>
-</div>
 
 
-<!-- Bootstrap CDN -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-<script src="{% static 'dashboard_reports.js' %}"></script>
 
-{% endblock content %}
+
+
+
+
+
+    {% endblock content %}

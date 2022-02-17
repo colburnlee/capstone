@@ -30,6 +30,7 @@ def manual_call(access_token, realm_id, service, customer):
     auth_header = 'Bearer {0}'.format(access_token)
 
     # route format # /v3/company/<realm_id>/invoice/<invoiceId>?minorversion=63
+    # /v3/company/4620816365212855650/query?query=select * from Customer Where Active = True&minorversion=63
     # print(base_url+route)
     # print(auth_header)
 
