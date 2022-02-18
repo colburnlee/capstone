@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 <div class="col" id="app">
-    <h1 class="h1">Finance Dashboard</h1>
+    <h1 class="h1 text-center">Finance Dashboard</h1>
     <div class="card text-white bg-secondary border-dark mt-4 shadow">
         <div class="d-flex justify-content-center">
 
@@ -11,64 +11,63 @@
             <h5 class="card-title text-center"><b>Information</b></h5>
             <p class="card-text text-end">
 
+                
                 Name: {{user.first_name}} {{user.last_name}} <br>
                 Username: {{user.username}} <br>
                 Email Address: {{user.email}} <br>
                 Finance ID: {{user.finance_id}} <br>
-                Service End Date: {{user.end_date}} <br><br>
+                Service End Date: {{user.end_date}} <br><br><br>
 
-            <div class="div">
-                All Users view:<br>
+            <div class="div m-2 py-2 "> <!-- End User Functions -->
+                User view:<br>
                 <!-- Pear Suite Contact Info Button -->
-                <button v-on:click="getParentCompanyData()" type="button" class="btn btn-primary" data-bs-toggle="modal"
+                <button v-on:click="getParentCompanyData()" type="button" class="btn btn-outline-light" data-bs-toggle="modal"
                     data-bs-target="#parentCompanyInfo">
                     Pear Suite Contact Info
                 </button>
 
                 <!-- Pear Suite Invoice Lookup Button: -->
                 <!-- Examples: Transaction 130, 129 -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal"
                     data-bs-target="#manualCompanyInvoiceLookup">
                     Invoice Lookup
                 </button>
 
                 <!-- Refresh Token Button: -->
-                <button v-on:click="refreshCurrentToken()" type="button" class="btn btn-primary" data-bs-toggle="modal"
+                <button v-on:click="refreshCurrentToken()" type="button" class="btn btn-outline-light" data-bs-toggle="modal"
                     data-bs-target="#refreshTokenCall">
                     Refresh Current Session
                 </button>
 
                 <!-- Customer Info Lookup Button: -->
-                <button v-on:click="lookupCustomerById({{user.finance_id}})" type="button" class="btn btn-primary"
+                <button v-on:click="lookupCustomerById({{user.finance_id}})" type="button" class="btn btn-outline-light"
                     data-bs-toggle="modal" data-bs-target="#modalCustomerInformation">
                     Lookup/Update My Info
                 </button>
             </div> 
-            
 
-            <br>
-
-            <div class="div my-2">
+            <div class="div m-2 py-2"> <!-- Pear Suite Staff Functions -->
+                {% if request.user.is_staff %}
                 Admin View:<br>
 
                 <!-- Pear Suite Lookup Customer By ID Button: -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal"
                     data-bs-target="#manualReadCustomerById">
                     Lookup Customer By ID
                 </button>
 
                 <!-- Pear Suite Create New Customer Button: -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal"
                     data-bs-target="#createNewCustomerModal">
                     Create New Customer
                 </button>
 
                 <!-- Pear Suite Admin - Create Service Invoice Button: -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal"
                     data-bs-target="#createNewInvoiceModal">
                     Create a Service Invoice
                 </button>
-
+                {% endif %}
             </div>
 
             <!-- Pear Suite Contact Info Modal -->
@@ -118,7 +117,7 @@
 
                             <p v-if="manualInvoiceCompany"><br><br>
                                 {% csrf_token %}
-                                <button @click="SendExistingInvoiceOption = !SendExistingInvoiceOption">Email this invoice</button> <input v-if="SendExistingInvoiceOption" v-model.trim="SendExistingInvoiceEmail"  placeholder="user@name.com"><br>
+                                <button @click="SendExistingInvoiceOption = !SendExistingInvoiceOption">Email this invoice</button> <input v-if="SendExistingInvoiceOption" v-model.trim="SendExistingInvoiceEmail"  placeholder="try {{ user.email }}"><br>
                                 Billed to: [[ manualInvoiceCompany ]]<br>
 
                                 <a v-if="manualInvoiceAddressCity">[[ manualInvoiceAddressLine1 ]] <br>
@@ -145,7 +144,7 @@
                             <button v-show="SendExistingInvoiceEmail" v-on:click="SendExistingInvoice(), clearInvoiceRequest(), SendExistingInvoiceEmail=''"
                                 type="button text-dark" class="btn btn-warning">Email: [[ SendExistingInvoiceEmail ]] </button>
                             <button v-on:click="clearInvoiceRequest(), manualCompanyInvoice(transactionNumber)"
-                                type="button text-dark" class="btn btn-primary">Lookup Invoice</button>
+                                type="button text-dark" class="btn btn-primary btn-outline-dark">Lookup Invoice</button>
                             <button v-on:click="clearInvoiceRequest(),manualInvoiceLink=false,SendExistingInvoiceEmail=''" type="button text-dark"
                                 class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
@@ -173,9 +172,8 @@
 
                             <!-- This is the view to view customer info -->
                             <div v-show="manualCustomerLookupView" class="modal-body text-dark">
-                                <p v-if="manualCustomerLookup"><br><br>Email Address:<a
-                                        v-bind:href="[[manualCustomerLookupPrimaryEmailAddr]]"> [[
-                                        this.manualCustomerLookupPrimaryEmailAddr]]</a><br>
+                                <p v-if="manualCustomerLookup"><br><br>Email Address: [[
+                                        this.manualCustomerLookupPrimaryEmailAddr]]<br>
                                     Business Name: [[ this.manualCustomerLookupDisplayName]]<br>
                                     POC: [[ this.manualCustomerLookupGivenName]] [[
                                     this.manualCustomerLookupFamilyName]]<br>
@@ -226,7 +224,7 @@
                                 class="btn btn-danger">Update this ID</button>
 
                             <button
-                                v-on:click="sparseUpdateCustomer(), manualCustomerLookupEdit=false, manualCustomerLookupView=true, manualCustomerLookupEditButton=false"
+                                v-on:click="sparseUpdateCustomer(), manualCustomerLookupEdit=false, manualCustomerLookupView=true, manualCustomerLookupEditButton=false, clearlookupCustomerById()"
                                 v-show="manualCustomerLookupEditButton" type="button text-dark"
                                 class="btn btn-danger">Submit Info Update</button>
 
@@ -235,7 +233,7 @@
                                 type="button text-dark" class="btn btn-primary">Lookup ID</button>
 
                             <button
-                                v-on:click="manualCustomerLookupEdit=false, manualCustomerLookupView=true, manualCustomerLookupEditButton=false"
+                                v-on:click="clearlookupCustomerById(),manualCustomerLookupEdit=false, manualCustomerLookupView=true, manualCustomerLookupEditButton=false"
                                 type="button text-dark" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
 
@@ -437,10 +435,10 @@
                 </div>
             </div>
 
-                </p>
-            </div>
+            </p>
         </div>
     </div>
+</div>
 
 
 

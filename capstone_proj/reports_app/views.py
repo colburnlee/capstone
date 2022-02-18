@@ -25,14 +25,6 @@ from django.core import serializers
 
 from reports_app.services import qbo_api_call, manual_call
 
-auth_client = AuthClient(
-        settings.CLIENT_ID, 
-        settings.CLIENT_SECRET, 
-        settings.REDIRECT_URI, 
-        settings.ENVIRONMENT,
-    )
-
-# Create your views here.
 def index(request):
     return render(request, 'reports_app/index.html')
 
@@ -48,7 +40,6 @@ def oauth(request):
     )
 
     url = auth_client.get_authorization_url([Scopes.ACCOUNTING])
-    print(url)
     request.session['state'] = auth_client.state_token
     return redirect(url)
 
@@ -197,7 +188,6 @@ def revoke(request):
         print(e.intuit_tid)
     return HttpResponse('Revoke successful')
 
-
 def migration(request):
     auth_client = AuthClient(
         settings.CLIENT_ID, 
@@ -218,7 +208,6 @@ def migration(request):
         print(e.status_code)
         print(e.intuit_tid)
     return HttpResponse('OAuth2 refresh_token {0}'.format(auth_client.refresh_token))
-
 
 def invoice(request):
     """Returns all invoices"""
@@ -245,10 +234,7 @@ def invoice(request):
         invoice = invoice.to_json()
         invoice = json.loads(invoice)
         invoice_response.append(json.dumps(invoice))
-    print(invoice_response)
-
     return HttpResponse(invoice_response, content_type="application/json")
-
 
 def list_customers(request):
     """Returns querey customer for all active customers"""
@@ -278,10 +264,7 @@ def list_customers(request):
         base_url =  settings.QBO_BASE_SANDBOX
 
     route = '/v3/company/{0}/{1}?{2}&minorversion=63'.format(auth_client.realm_id, 'query', 'select * from Customer Where Active = True')
-    print(base_url+route)
     response = requests.get('{0}{1}'.format(base_url, route), headers=headers)
-    print(response)
-    # print(settings.COMPANY_ID)
     # /v3/company/4620816365212855650/query?query=select * from Customer Where Active = True&minorversion=63
     
     
@@ -305,11 +288,11 @@ def company_lookup(request):
         company_id=settings.COMPANY_ID,
         minorversion=63
     )
-    print(f"finance ID: {request.finance_id}")
     customers = Customer.filter(Id=request.finance_id, qb=client)
     return HttpResponse(customers, content_type="application/json")
 
 def manual_invoice(request, transaction_number=False):
+    # Takes in transaction number to return invoice information from quickbooks
     auth_client = AuthClient(
         settings.CLIENT_ID, 
         settings.CLIENT_SECRET, 
@@ -325,9 +308,8 @@ def manual_invoice(request, transaction_number=False):
 
     if auth_client.realm_id is None:
         raise ValueError('Realm id not specified.')
+        
     response = manual_call(auth_client.access_token, auth_client.realm_id, 'invoice', transaction_number)
-    # print(response)
-    # print(settings.COMPANY_ID)
     
     if not response.ok:
         return HttpResponse(' '.join([response.content, str(response.status_code)]))
@@ -354,14 +336,11 @@ def read_customer(request, finance_id=5):
         raise ValueError('Realm id not specified.')
     
     response = manual_call(auth_client.access_token, auth_client.realm_id, 'customer', finance_id)
-    print(response)
-    # print(settings.COMPANY_ID)
     
     if not response.ok:
         return HttpResponse(' '.join([response.content, str(response.status_code)]))
     else:
         return HttpResponse(response.content, content_type="application/json")
-
 
 def auth_header(request):
     auth_client = AuthClient(
@@ -382,8 +361,6 @@ def auth_header(request):
     # }
     print(f"bearer token updated: {auth_header}")
     return HttpResponse(auth_header)
-
-
 
 def sparse_update_customer(request):
     """Takes in context to update profile, converts to JSON, attempts to update profile"""
@@ -460,8 +437,6 @@ def create_new_customer(request):
 
     response = requests.post('{0}{1}'.format(base_url, route), headers=headers, data=body)
 
-    print(f"request: {request}")
-
     return HttpResponse(response.content, content_type="application/json")
 
 def create_new_invoice(request):
@@ -501,8 +476,6 @@ def create_new_invoice(request):
     body = request
 
     response = requests.post('{0}{1}'.format(base_url, route), headers=headers, data=body)
-
-    print(f"POST request to: {base_url}{route}")
 
     return HttpResponse(response.content, content_type="application/json")
 
@@ -545,8 +518,5 @@ def email_invoice(request, invoice_id, email_address):
     body = request
 
     response = requests.post('{0}{1}'.format(base_url, route), headers=headers)
-
-    print(f"POST request to: {base_url}{route}")
-
 
     return HttpResponse(response.content, content_type="application/json")

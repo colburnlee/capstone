@@ -37,7 +37,7 @@ def register(request):
 
             add_user.save()
 
-    return HttpResponseRedirect(reverse('reports_app:home'))
+    return HttpResponseRedirect(reverse('reports_app:index'))
 
 
 def login(request):

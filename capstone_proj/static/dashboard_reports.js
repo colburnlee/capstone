@@ -82,12 +82,9 @@ var app = new Vue({
 
     const: csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value,
 
-    created () {
-    },
-
     methods: {
-      getParentCompanyData: function() {
-        // Gets info on Parent Company (the owner of the Intuit Account)
+      getParentCompanyData: function() { // Gets info on Parent Company (the owner of the Intuit Account)
+        
         this.parentCompanyAddressLine1 = "loading..."
         this.parentCompanyAddressCity = ""
         this.parentCompanyAddressCountrySubdivisionCode = ""
@@ -107,16 +104,16 @@ var app = new Vue({
             .catch(error => {console.log(error)})
       },
 
-      refreshCurrentToken: function() {
-        // Refreshes current security token
+      refreshCurrentToken: function() { // Refreshes current security token
+        
         this.refreshToken = "loading..."
         axios
           .get("/refresh/")
           .then(response => {(this.refreshToken = `New session token created: ${JSON.stringify(response.data)}`)})
       },
 
-      clearInvoiceRequest: function() {
-        // Clears fields related to a invoice lookup
+      clearInvoiceRequest: function() { // Clears fields related to a invoice lookup
+        
         this.manualInvoiceCompany = ""
         this.manualInvoiceAddress = ""
         this.manualInvoiceAddressLine1 = "" 
@@ -133,8 +130,8 @@ var app = new Vue({
         this.manualInvoiceDueDate = ""
       },
 
-      invoiceRequest: function() {
-        // Calls all invoices from intuit. Intuit added in an offset for JSON, though, so this returns a string
+      invoiceRequest: function() { // Calls all invoices from intuit. Intuit added in an offset for JSON, though, so this returns a string
+        
         this.invoiceData = "loading..."
         axios
           .get("/invoice/")
@@ -150,16 +147,16 @@ var app = new Vue({
       },    
 
 
-      lookupCompanyById: function() {
-        // Looks up an existing company by the Intuit ID
+      lookupCompanyById: function() { // Looks up an existing company by the Intuit ID
+        
         this.lookupCompany = "loading..."
         axios
           .get("/company_lookup/")
           .then(response => (this.lookupCompany = JSON.stringify(response)))
       },
 
-      manualCompanyInvoice: function(transactionNumber) {
-        // Takes in a transaction number to return the associated invoice
+      manualCompanyInvoice: function(transactionNumber) { // Takes in a transaction number to return the associated invoice
+        
         this.manualInvoice = "loading..."
         this.manualInvoiceCompany = "loading..."
         this.manualInvoiceLineItems = "loading..."
@@ -189,11 +186,8 @@ var app = new Vue({
 
       },
 
-
-
-      
-      lookupCustomerById: function(manualCustomerLookupId) {
-        // Takes in Intuit Customer ID and returns Display name, address, and other info
+      lookupCustomerById: function(manualCustomerLookupId) { // Takes in Intuit Customer ID and returns Display name, address, and other info
+        
         this.manualCustomerLookup= "loading..."
         this.manualCustomerLookupDisplayName= "loading..." 
         this.manualCustomerLookupGivenName= "" 
@@ -217,22 +211,22 @@ var app = new Vue({
             
             // console.log(response.data)
 
-            if (response.data.Customer.BillAddr.Id) {
+            if (response.data.Customer.BillAddr) {
             this.manualCustomerLookupBillAddrID = response.data.Customer.BillAddr.Id
             } else {
               this.manualCustomerLookupBillAddrID = 0
             } 
 
-            if (response.data.Customer.PrimaryEmailAddr.Address) {
+            if (response.data.Customer.PrimaryEmailAddr) {
             this.manualCustomerLookupPrimaryEmailAddr = response.data.Customer.PrimaryEmailAddr.Address
             } else {
-              this.manualCustomerLookupPrimaryEmailAddr = ""
+              this.manualCustomerLookupPrimaryEmailAddr = "N/A"
             }
             
-            if (response.data.Customer.PrimaryPhone.FreeFormNumber) {
+            if (response.data.Customer.PrimaryPhone) {
               this.manualCustomerLookupPrimaryPhone = response.data.Customer.PrimaryPhone.FreeFormNumber
             } else {
-              this.manualCustomerLookupPrimaryPhone = ""
+              this.manualCustomerLookupPrimaryPhone = "N/A"
             }
             
 
@@ -264,8 +258,20 @@ var app = new Vue({
 
       },   
 
-      sparseUpdateCustomer: function() {
-        // Update existing customer information
+      clearlookupCustomerById: function() {// Clears fields related customer Id Lookup
+        this.manualCustomerLookup= ""
+        this.manualCustomerLookupDisplayName= "" 
+        this.manualCustomerLookupGivenName= "" 
+        this.manualCustomerLookupFamilyName= ""
+        this.manualCustomerLookupActive= "" 
+        this.manualCustomerLookupPrimaryEmailAddr= "" 
+        this.manualCustomerLookupPrimaryPhone = ""
+        this.manualCustomerLookupBillAddr = []
+        this.manualCustomerLookupSyncToken = ""
+      },
+
+      sparseUpdateCustomer: function() { // Update existing customer information
+        
         let DisplayName = this.manualCustomerLookupDisplayName,
         GivenName = this.manualCustomerLookupGivenName,
         FamilyName = this.manualCustomerLookupFamilyName,
@@ -318,199 +324,152 @@ var app = new Vue({
         .then(function (response) {
             // console.log(JSON.stringify(response.data));
             this.manualCustomerLookup = response.data
-            this.manualCustomerLookupDisplayName = this.manualCustomerLookup.Customer.DisplayName
-            this.manualCustomerLookupGivenName = this.manualCustomerLookup.Customer.GivenName
-            this.manualCustomerLookupFamilyName = this.manualCustomerLookup.Customer.FamilyName
-            this.manualCustomerLookupActive = this.manualCustomerLookup.Customer.Active
-            this.manualCustomerLookupSyncToken = this.manualCustomerLookup.Customer.SyncToken
-            this.manualCustomerLookupEntryID = this.manualCustomerLookup.Customer.Id
-            
-            if (this.manualCustomerLookup.Customer.BillAddr.Id) {
-              this.manualCustomerLookupBillAddrID = this.manualCustomerLookup.Customer.BillAddr.Id
-            } else this.manualCustomerLookupBillAddrID = 0
-            
-            
-            
-            if (this.manualCustomerLookup.Customer.PrimaryEmailAddr.Address) {
-            this.manualCustomerLookupPrimaryEmailAddr = this.manualCustomerLookup.Customer.PrimaryEmailAddr.Address
-            } else {
-              this.manualCustomerLookupPrimaryEmailAddr = ""
-            }
-            
-            if (this.manualCustomerLookup.Customer.PrimaryPhone.FreeFormNumber) {
-              this.manualCustomerLookupPrimaryPhone = this.manualCustomerLookup.Customer.PrimaryPhone.FreeFormNumber
-            } else {
-              this.manualCustomerLookupPrimaryPhone = ""
-            }
-            
-
-            if (this.manualCustomerLookup.Customer.BillAddr){
-            this.manualCustomerLookupBillAddrStreet = this.manualCustomerLookup.Customer.BillAddr.Line1
-            this.manualCustomerLookupBillAddrCity = this.manualCustomerLookup.Customer.BillAddr.City
-            this.manualCustomerLookupBillAddrCountrySubDivisionCode = this.manualCustomerLookup.Customer.BillAddr.CountrySubDivisionCode
-            this.manualCustomerLookupBillAddrPostalCode = this.manualCustomerLookup.Customer.BillAddr.PostalCode
-            } else {
-              this.manualCustomerLookupBillAddrStreet = ""
-              this.manualCustomerLookupBillAddrCity = ""
-              this.manualCustomerLookupBillAddrCountrySubDivisionCode = "" 
-              this.manualCustomerLookupBillAddrPostalCode = "" 
-            }
-
-            if (this.manualCustomerLookup.Customer.BillAddr) {
-              this.manualCustomerLookupBillAddr = [
-              this.manualCustomerLookupBillAddrStreet,
-              this.manualCustomerLookupBillAddrCity,
-              this.manualCustomerLookupBillAddrCountrySubDivisionCode,
-              this.manualCustomerLookupBillAddrPostalCode
-            ]} else {
-              this.manualCustomerLookupBillAddr = false
-            }
           })
         .catch(function (error) {
           console.log(error);
         })
-    },
 
-    clearNewCustomer: function() {
-      // Clears fields related to creating a new customer
-      this.newCustomerSubmitted = ""
-      this.newCustomerSuccess = ""
-      this.newFullyQualifiedName = ""
-      this.newPrimaryEmailAddr = "" 
-      this.newDisplayName = "" 
-      this.newSuffix = "" 
-      this.newTitle = "" 
-      this.newMiddleName = "" 
-      this.newNotes = "" 
-      this.newFamilyName = "" 
-      this.newFreeFormNumber = "" 
-      this.newCompanyName = "" 
-      this.newCountrySubDivisionCode = "" 
-      this.newCity = "" 
-      this.newPostalCode = "" 
-      this.newLine1 = "" 
-      this.newCountry = "" 
-      this.newGivenName = ""
-    },
+      },
 
-    createNewCustomer: function(){
-      // Takes in new customer info from vue DOM. Submits to Intuit to create new customer entry
-      let newCustomer = JSON.stringify({
-        "FullyQualifiedName": this.newFullyQualifiedName, 
-        "PrimaryEmailAddr": {
-          "Address": this.newPrimaryEmailAddr
-        }, 
-        "DisplayName": this.newDisplayName, 
-        "Suffix": this.newSuffix, 
-        "Title": this.newTitle, 
-        "MiddleName": this.newMiddleName, 
-        "Notes": this.newNotes, 
-        "FamilyName": this.newFamilyName, 
-        "PrimaryPhone": {
-          "FreeFormNumber": this.newFreeFormNumber
-        }, 
-        "CompanyName": this.newDisplayName, 
-        "BillAddr": {
-          "CountrySubDivisionCode": this.newCountrySubDivisionCode, 
-          "City": this.newCity, 
-          "PostalCode": this.newPostalCode, 
-          "Line1": this.newLine1, 
-          "Country": this.newCountry
-        }, 
-        "GivenName": this.newGivenName
-      })
+      clearNewCustomer: function() { // Clears fields related to creating a new customer
+        
+        this.newCustomerSubmitted = ""
+        this.newCustomerSuccess = ""
+        this.newFullyQualifiedName = ""
+        this.newPrimaryEmailAddr = "" 
+        this.newDisplayName = "" 
+        this.newSuffix = "" 
+        this.newTitle = "" 
+        this.newMiddleName = "" 
+        this.newNotes = "" 
+        this.newFamilyName = "" 
+        this.newFreeFormNumber = "" 
+        this.newCompanyName = "" 
+        this.newCountrySubDivisionCode = "" 
+        this.newCity = "" 
+        this.newPostalCode = "" 
+        this.newLine1 = "" 
+        this.newCountry = "" 
+        this.newGivenName = ""
+      },
 
-      // console.log(Customer)
-      let instance = axios.create({
-        'headers': {'X-CSRFToken': csrftoken}
-      });
+      createNewCustomer: function(){ // Takes in new customer info from vue DOM. Submits to Intuit to create new customer entry
+        
+        let newCustomer = JSON.stringify({
+          "FullyQualifiedName": this.newFullyQualifiedName, 
+          "PrimaryEmailAddr": {
+            "Address": this.newPrimaryEmailAddr
+          }, 
+          "DisplayName": this.newDisplayName, 
+          "Suffix": this.newSuffix, 
+          "Title": this.newTitle, 
+          "MiddleName": this.newMiddleName, 
+          "Notes": this.newNotes, 
+          "FamilyName": this.newFamilyName, 
+          "PrimaryPhone": {
+            "FreeFormNumber": this.newFreeFormNumber
+          }, 
+          "CompanyName": this.newDisplayName, 
+          "BillAddr": {
+            "CountrySubDivisionCode": this.newCountrySubDivisionCode, 
+            "City": this.newCity, 
+            "PostalCode": this.newPostalCode, 
+            "Line1": this.newLine1, 
+            "Country": this.newCountry
+          }, 
+          "GivenName": this.newGivenName
+        })
 
-      axios
-      instance.post('/create_new_customer/', newCustomer)
-      .then(response => {
-        try {
-          this.newCustomerSubmitted = response.data
+        // console.log(Customer)
+        let instance = axios.create({
+          'headers': {'X-CSRFToken': csrftoken}
+        });
 
-          if (this.newCustomerSubmitted.Customer.Id) {
-          this.newCustomerSuccess = `Success! Customer '${this.newCustomerSubmitted.Customer.FullyQualifiedName}' created with Id ${this.newCustomerSubmitted.Customer.Id}`,
-          this.newCustomerSubmitted = ""
-          } else {
-          this.newCustomerSubmitted = response.data
-        }
-        }
-        finally {
-        error => {
-        this.newCustomerSubmitted = error
-        console.log(error)
-        }
-        }        
-      })
-    },
+        axios
+        instance.post('/create_new_customer/', newCustomer)
+        .then(response => {
+          try {
+            this.newCustomerSubmitted = response.data
 
-    createNewInvoice: function(){
-      // Takes in transaction info from vue DOM. Submits to Intuit to create a new invoice to an existing customer
+            if (this.newCustomerSubmitted.Customer.Id) {
+            this.newCustomerSuccess = `Success! Customer '${this.newCustomerSubmitted.Customer.FullyQualifiedName}' created with Id ${this.newCustomerSubmitted.Customer.Id}`,
+            this.newCustomerSubmitted = ""
+            } else {
+            this.newCustomerSubmitted = response.data
+          }
+          }
+          finally {
+          error => {
+          this.newCustomerSubmitted = error
+          console.log(error)
+          }
+          }        
+        })
+      },
 
-      let newInvoice = JSON.stringify({
-        "Line": [
-          {
-            "DetailType": "SalesItemLineDetail", 
-            "Amount": this.newInvoiceAmount, 
-            "SalesItemLineDetail": {
-              "ItemRef": {
-                "name": "Services", 
-                "value": "1"
+      createNewInvoice: function(){ // Takes in transaction info from vue DOM. Submits to Intuit to create a new invoice to an existing customer
+        
+
+        let newInvoice = JSON.stringify({
+          "Line": [
+            {
+              "DetailType": "SalesItemLineDetail", 
+              "Amount": this.newInvoiceAmount, 
+              "SalesItemLineDetail": {
+                "ItemRef": {
+                  "name": "Services", 
+                  "value": "1"
+                }
               }
             }
+          ], 
+          "CustomerRef": {
+            "value": this.newInvoiceCustomerId
           }
-        ], 
-        "CustomerRef": {
-          "value": this.newInvoiceCustomerId
-        }
-      })
+        })
 
 
 
-      let instance = axios.create({
-        'headers': {'X-CSRFToken': csrftoken}
-      });
+        let instance = axios.create({
+          'headers': {'X-CSRFToken': csrftoken}
+        });
 
-      axios
-      instance.post('/create_new_invoice/', newInvoice)
-      .then(response => {
-        try {
-          this.newInvoiceSubmitted = response.data
+        axios
+        instance.post('/create_new_invoice/', newInvoice)
+        .then(response => {
+          try {
+            this.newInvoiceSubmitted = response.data
 
-          if (this.newInvoiceSubmitted.Invoice.domain) {
-          this.newInvoiceSuccess = `Success! Customer '${this.newInvoiceSubmitted.Invoice.CustomerRef.value} - ${this.newInvoiceSubmitted.Invoice.CustomerRef.name}' invoice has been created for $${this.newInvoiceSubmitted.Invoice.TotalAmt}. Transaction Id: ${this.newInvoiceSubmitted.Invoice.Id}`,
-          this.newInvoiceSubmitted = ""
-          } else {
-          this.newInvoiceSubmitted = response.data
-        }
-        }
-        finally {
-        error => {
-        this.newInvoiceSubmitted = error
-        console.log(error)
-        }
-        }        
-      })
+            if (this.newInvoiceSubmitted.Invoice.domain) {
+            this.newInvoiceSuccess = `Success! Customer '${this.newInvoiceSubmitted.Invoice.CustomerRef.value} - ${this.newInvoiceSubmitted.Invoice.CustomerRef.name}' invoice has been created for $${this.newInvoiceSubmitted.Invoice.TotalAmt}. Transaction Id: ${this.newInvoiceSubmitted.Invoice.Id}`,
+            this.newInvoiceSubmitted = ""
+            } else {
+            this.newInvoiceSubmitted = response.data
+          }
+          }
+          finally {
+          error => {
+          this.newInvoiceSubmitted = error
+          console.log(error)
+          }
+          }        
+        })
 
-    },
-    clearNewInvoice: function() {
-      // Clears fields related to creating a new customer
-      this.newInvoiceAmount = 0
-      this.newInvoiceCustomerId = ""
-      this.newInvoiceSubmitted = ""
-      this.newInvoiceSuccess = ""
-      this.newInvoiceView = true
-      this.SendExistingInvoiceEmail = ""
-      this.SendExistingInvoiceOption = false
-    },
+      },
 
-    SendExistingInvoice: function() {
-      // Sends an existing invoice to a specified email address
-      // /v3/company/<realmID>/invoice/<invoiceId>/send?sendTo=<emailAddr>
+      clearNewInvoice: function() { // Clears fields related to creating a new invoice
+        
+        this.newInvoiceAmount = 0
+        this.newInvoiceCustomerId = ""
+        this.newInvoiceSubmitted = ""
+        this.newInvoiceSuccess = ""
+        this.newInvoiceView = true
+        this.SendExistingInvoiceEmail = ""
+        this.SendExistingInvoiceOption = false
+      },
 
+      SendExistingInvoice: function() { // Sends an existing invoice to a specified email address
+      
       let instance = axios.create({
         'headers': {'X-CSRFToken': csrftoken}
       });
