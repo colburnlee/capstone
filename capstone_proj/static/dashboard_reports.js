@@ -1,7 +1,8 @@
 var app = new Vue({
     el: '#app',
     delimiters: ['[[', ']]'],
-    data: {
+    data() {
+      return {
       parentCompanyData: [],
       parentCompanyAddressLine1: "",
       parentCompanyAddressCity: "",
@@ -78,6 +79,7 @@ var app = new Vue({
       SendExistingInvoiceEmail: "",
       SendExistingInvoiceOption: false,
       SendExistingInvoiceResponse: "",
+      }
     },
 
     const: csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value,

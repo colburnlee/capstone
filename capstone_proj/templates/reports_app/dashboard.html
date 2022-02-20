@@ -18,55 +18,82 @@
                 Finance ID: {{user.finance_id}} <br>
                 Service End Date: {{user.end_date}} <br><br><br>
 
-            <div class="div m-2 py-2 "> <!-- End User Functions -->
+
+            <div class="list-group m-2 py-2"> <!-- Pear Suite - All User Functions -->
                 User view:<br>
                 <!-- Pear Suite Contact Info Button -->
-                <button v-on:click="getParentCompanyData()" type="button" class="btn btn-outline-light" data-bs-toggle="modal"
-                    data-bs-target="#parentCompanyInfo">
-                    Pear Suite Contact Info
-                </button>
+                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start" v-on:click="getParentCompanyData()" data-bs-toggle="modal" data-bs-target="#parentCompanyInfo">
+                    
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1">Pear Suite's Contact Information <i class="bi bi-box-arrow-up-right"></i></h5>
+                    </div>
+                    <p class="mb-1">View the current information for Pear Suite, inc. Useful if you need to contact us or write/address payment information
+                    </p>
+                </a>
 
                 <!-- Pear Suite Invoice Lookup Button: -->
                 <!-- Examples: Transaction 130, 129 -->
-                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal"
-                    data-bs-target="#manualCompanyInvoiceLookup">
-                    Invoice Lookup
-                </button>
+                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start" data-bs-toggle="modal" data-bs-target="#manualCompanyInvoiceLookup">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Lookup an Invoice <i class="bi bi-box-arrow-up-right"></i></h5>
+                      </div>
+                      <p class="mb-1">Have a transaction ID? Enter it here to retrieve your service invoice </p>    
+                </a>
 
                 <!-- Refresh Token Button: -->
-                <button v-on:click="refreshCurrentToken()" type="button" class="btn btn-outline-light" data-bs-toggle="modal"
-                    data-bs-target="#refreshTokenCall">
-                    Refresh Current Session
-                </button>
+                <a href="#" v-on:click="refreshCurrentToken()" class="list-group-item list-group-item-action flex-column align-items-start" data-bs-toggle="modal" data-bs-target="#refreshTokenCall">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Refresh Current Session <i class="bi bi-box-arrow-up-right"></i></h5>
+                      </div>
+                      <p class="mb-1">If you need more time, click here to refresh your current session </p>    
+                </a>
 
                 <!-- Customer Info Lookup Button: -->
-                <button v-on:click="lookupCustomerById({{user.finance_id}})" type="button" class="btn btn-outline-light"
-                    data-bs-toggle="modal" data-bs-target="#modalCustomerInformation">
-                    Lookup/Update My Info
-                </button>
-            </div> 
+                <a href="#" v-on:click="lookupCustomerById({{user.finance_id}})" class="list-group-item list-group-item-action flex-column align-items-start" data-bs-toggle="modal" data-bs-target="#modalCustomerInformation">
+                    
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Billing Information <i class="bi bi-box-arrow-up-right"></i></h5>
+                      </div>
+                      <p class="mb-1">Lookup and edit your current billing information on file </p>    
+                </a>
+
+            </div>
+
+
 
             <div class="div m-2 py-2"> <!-- Pear Suite Staff Functions -->
                 {% if request.user.is_staff %}
                 Admin View:<br>
 
-                <!-- Pear Suite Lookup Customer By ID Button: -->
-                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal"
-                    data-bs-target="#manualReadCustomerById">
-                    Lookup Customer By ID
-                </button>
+                <!-- Lookup Customer By ID Button: -->
+                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start" data-bs-toggle="modal" data-bs-target="#manualReadCustomerById">
+                    
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1">Lookup Customer By ID <i class="bi bi-box-arrow-up-right"></i></h5>
+                    </div>
+                    <p class="mb-1"> Lookup and edit billing information for any customer on file.
+                    </p>
+                </a>
 
-                <!-- Pear Suite Create New Customer Button: -->
-                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal"
-                    data-bs-target="#createNewCustomerModal">
-                    Create New Customer
-                </button>
+                <!-- Create New Customer: -->
+                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start" data-bs-toggle="modal" data-bs-target="#createNewCustomerModal">
+                    
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1">Create New Customer <i class="bi bi-box-arrow-up-right"></i></h5>
+                    </div>
+                    <p class="mb-1">Create a new billing entity within the Intuit system
+                    </p>
+                </a>
 
-                <!-- Pear Suite Admin - Create Service Invoice Button: -->
-                <button type="button" class="btn btn-outline-light" data-bs-toggle="modal"
-                    data-bs-target="#createNewInvoiceModal">
-                    Create a Service Invoice
-                </button>
+                <!-- Create New Service Invoice -->
+                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start" data-bs-toggle="modal" data-bs-target="#createNewInvoiceModal">
+                    
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1">Create New Service Invoice <i class="bi bi-box-arrow-up-right"></i></h5>
+                    </div>
+                    <p class="mb-1">Create a simple (single line) Net 30 invoice. 
+                    </p>
+                </a>
                 {% endif %}
             </div>
 
@@ -303,7 +330,7 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title text-dark" id="refreshTokenCallLabel"> Invoice </h5>
+                            <h5 class="modal-title text-dark" id="refreshTokenCallLabel"> Token Refresh </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>
