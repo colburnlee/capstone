@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 
-<h1 class="h1">{{user.first_name}}'s User Profile</h1>
+<h1 class="h1 text-center">{{user.first_name}}'s User Profile</h1>
 
 <div class="col">
     <div class="card text-white bg-secondary border-dark mt-4 shadow">
@@ -11,7 +11,7 @@
         </div>
         <div class="card-body">
             <h5 class="card-title text-center"><b>Information</b></h5>          
-            <p class="card-text text-end">
+            <p class="card-text">
                 Name: {{user.first_name}} {{user.last_name}} <br>
                 Username: {{user.username}} <br>
                 Email Address: {{user.email}} <br>

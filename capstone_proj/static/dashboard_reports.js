@@ -9,6 +9,8 @@ var app = new Vue({
       parentCompanyAddressCountrySubdivisionCode: "", 
       parentCompanyAddressPostalCode: "",
       parentCompanyAddressEmailAddress: "",
+      parentCompanyAddressWebAddr: "",
+      parentCompanyAddressFreeFormNumber: "",
       refreshToken: "",
       invoiceData: "",
       listCustomerData: "",
@@ -33,6 +35,7 @@ var app = new Vue({
       manualInvoiceAddressLine2: "",
       manualInvoiceAddressLine3: "",
       manualInvoiceAddressLine4: "", 
+      manualInvoicePrivateNote: "",
       manualCustomerLookupDisplayName: "",
       manualCustomerLookupGivenName: "",
       manualCustomerLookupFamilyName: "",
@@ -91,6 +94,8 @@ var app = new Vue({
         this.parentCompanyAddressCity = ""
         this.parentCompanyAddressCountrySubdivisionCode = ""
         this.parentCompanyAddressPostalCode = ""
+        this.parentCompanyAddressWebAddr = ""
+        this.parentCompanyAddressFreeFormNumber = ""
         this.parentCompanyAddressEmailAddress = "loading..."
 
         axios
@@ -98,6 +103,8 @@ var app = new Vue({
             .then((response) => {
               this.parentCompanyData = response
               this.parentCompanyAddressLine1 = this.parentCompanyData.data.CompanyInfo.CompanyAddr.Line1
+              this.parentCompanyAddressFreeFormNumber = this.parentCompanyData.data.CompanyInfo.PrimaryPhone.FreeFormNumber
+              this.parentCompanyAddressWebAddr = this.parentCompanyData.data.CompanyInfo.WebAddr.URI
               this.parentCompanyAddressCity = this.parentCompanyData.data.CompanyInfo.CompanyAddr.City
               this.parentCompanyAddressCountrySubdivisionCode = this.parentCompanyData.data.CompanyInfo.CompanyAddr.CountrySubDivisionCode
               this.parentCompanyAddressPostalCode = this.parentCompanyData.data.CompanyInfo.CompanyAddr.PostalCode
@@ -182,13 +189,14 @@ var app = new Vue({
             this.manualInvoiceTransactionDate = this.manualInvoice.Invoice.TxnDate
             this.manualInvoiceTotalAmt = this.manualInvoice.Invoice.TotalAmt
             this.manualInvoiceDueDate = this.manualInvoice.Invoice.DueDate
+            this.manualInvoicePrivateNote = this.manualInvoice.Invoice.PrivateNote
 
           })
           .catch(error => {console.log(error)})
 
       },
 
-      lookupCustomerById: function(manualCustomerLookupId) { // Takes in Intuit Customer ID and returns Display name, address, and other info
+      lookupCustomerById: function(Id) { // Takes in Intuit Customer ID and returns Display name, address, and other info
         
         this.manualCustomerLookup= "loading..."
         this.manualCustomerLookupDisplayName= "loading..." 
@@ -201,7 +209,7 @@ var app = new Vue({
         this.manualCustomerLookupSyncToken = ""
 
         axios
-          .get(`/read_customer/${manualCustomerLookupId}`)
+          .get(`/read_customer/${Id}`)
           .then(response => {
             this.manualCustomerLookup = response.data
             this.manualCustomerLookupDisplayName = response.data.Customer.DisplayName
@@ -211,8 +219,6 @@ var app = new Vue({
             this.manualCustomerLookupSyncToken = response.data.Customer.SyncToken
             this.manualCustomerLookupEntryID = response.data.Customer.Id
             
-            // console.log(response.data)
-
             if (response.data.Customer.BillAddr) {
             this.manualCustomerLookupBillAddrID = response.data.Customer.BillAddr.Id
             } else {
@@ -324,7 +330,6 @@ var app = new Vue({
         axios
         instance.post('/sparse_update_customer/', Customer)
         .then(function (response) {
-            // console.log(JSON.stringify(response.data));
             this.manualCustomerLookup = response.data
           })
         .catch(function (error) {
@@ -411,7 +416,6 @@ var app = new Vue({
 
       createNewInvoice: function(){ // Takes in transaction info from vue DOM. Submits to Intuit to create a new invoice to an existing customer
         
-
         let newInvoice = JSON.stringify({
           "Line": [
             {
@@ -429,8 +433,6 @@ var app = new Vue({
             "value": this.newInvoiceCustomerId
           }
         })
-
-
 
         let instance = axios.create({
           'headers': {'X-CSRFToken': csrftoken}
@@ -468,6 +470,7 @@ var app = new Vue({
         this.newInvoiceView = true
         this.SendExistingInvoiceEmail = ""
         this.SendExistingInvoiceOption = false
+        this.manualInvoicePrivateNote = ""
       },
 
       SendExistingInvoice: function() { // Sends an existing invoice to a specified email address

@@ -13,15 +13,15 @@
 
       <!-- Logout if logged in -->
       <div class="d-flex mx-1">
-          <a class="btn btn-outline-dark mx-3" href="{% url 'users_app:profile' user.username %}">User Profile</a>
-          <a class="btn btn-outline-dark mx-3" href="{% url 'users_app:logout' %}">Logout</a>
+          <a class="btn btn-outline-light mx-3" href="{% url 'users_app:profile' user.username %}">User Profile</a>
+          <a class="btn btn-outline-light mx-3" href="{% url 'users_app:logout' %}">Logout</a>
       </div>
 
       {% else %}
       <!-- Login for Users/Admin -->
       <div class="btn-group">
-        <a class="btn btn-outline-dark mx-1" href="{% url 'users_app:login' %}">Login</a>  
-        <a class="btn btn-outline-dark mx-1" href="{% url 'users_app:register' %}">Sign up</a>
+        <a class="btn btn-outline-light mx-1" href="{% url 'users_app:login' %}">Login</a>  
+        <a class="btn btn-outline-light mx-1" href="{% url 'users_app:register' %}">Sign up</a>
       </div>
 
     {% endif %}

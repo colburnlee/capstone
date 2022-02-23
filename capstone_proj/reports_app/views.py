@@ -1,10 +1,5 @@
 # Create your views here.
 from __future__ import absolute_import
-from cgi import test
-from http.client import HTTPResponse
-from pandas import json_normalize
-
-from requests import HTTPError
 import json
 import requests
 
@@ -16,12 +11,10 @@ from intuitlib.exceptions import AuthClientError
 from quickbooks import QuickBooks
 from quickbooks.objects.customer import Customer
 from quickbooks.objects.invoice import Invoice
-from quickbooks.objects.bill import Bill
 
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.conf import settings
-from django.core import serializers
 
 from reports_app.services import qbo_api_call, manual_call
 
@@ -308,7 +301,7 @@ def manual_invoice(request, transaction_number=False):
 
     if auth_client.realm_id is None:
         raise ValueError('Realm id not specified.')
-        
+
     response = manual_call(auth_client.access_token, auth_client.realm_id, 'invoice', transaction_number)
     
     if not response.ok:
